@@ -7,4 +7,13 @@ export default defineNuxtConfig({
       autoprefixer: {},
     },
   },
+  modules: [
+    ['@nuxtjs/google-fonts', {
+      families: {
+        'Nunito': true,
+        download: true,
+        inject: true,
+      }
+    }]
+  ]
 })
