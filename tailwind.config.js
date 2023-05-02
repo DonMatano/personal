@@ -34,6 +34,9 @@ module.exports = {
         'accent-teal': '#4ee1a0',
         'dark-grey': '#242424',
         'light-grey': 'd9d9d9',
+      },
+      backgroundImage: {
+        'matano': "url('/assets/images/matano.jpg')"
       }
     },
   },
