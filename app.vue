@@ -1,30 +1,31 @@
 <template>
-  <div class="min-h-fit bg-matano bg-contain bg-right-top bg-no-repeat">
-    <div class="min-h-screen bg-primary-dark text-white px-3 min-w-screen md:px-10 ">
-      <div class="md:block ">
-        <Navbar />
-        <img class="md:hidden" src="~/assets/images/matano.jpg" alt="" />
-        <section class="mt-6 text-center">
-          <h1 class="text-[40px] font-bold leading-[40px] tracking-[-1.14px]">
+  <div>
+    <div class="min-h-screen bg-primary-dark text-white px-3 min-w-screen md:px-10 lg:px-24">
+      <Navbar class="w-full" />
+      <div class="md:flex md:gap-4 md:flex-row-reverse md:items-center border-b border-light-grey pb-20">
+        <img class="md:w-1/2" src="~/assets/images/matano.jpg" alt="" />
+        <section class="mt-6 text-center md:text-left  md:w-1/2">
+          <h1
+            class="text-[2.5rem] font-bold leading-[2.5rem] tracking-[-0.028em] md:text-[4.5rem] md:leading-[4.5rem] lg:text-xl">
             <span>
               Nice to meet you!
             </span>
             <br />
-            <span>absolute
+            <span>
               I am Matano.
             </span>
           </h1>
           <p class="text-body block mt-4">
             Based in Kenya, I'm a fullstack developer passionate about making software that changes people lives.
           </p>
-          <a href="#"
+          <a href="#contactForm"
             class="uppercase block underline underline-offset-8 decoration-accent-teal mt-10 text-body font-bold tracking-[2.29px]">
             Contact Me
           </a>
         </section>
       </div>
-      <section class="my-7">
-        <ul class="text-[2rem] text-center font-bold leading-[2.5rem] grid grid-cols-2 md:grid-cols-5">
+      <section class="my-7 mb-5">
+        <ul class="text-[2rem] text-center font-bold leading-[2.5rem] grid grid-cols-2 md:text-l md:grid-cols-3 gap-6">
           <li>NodeJS</li>
           <li>React</li>
           <li>Vue</li>
@@ -33,19 +34,24 @@
           <li>Flutter</li>
         </ul>
       </section>
-      <section>
-        <h2 class="text-[2.5rem] font-bold my-8">Projects</h2>
-        <ul class="flex flex-col gap-5 md:grid md:grid-cols-2 md:gap-4 md:gap-y-7 md:justify-between">
-          <li class="mx-3" v-for="i in 6" :key="i">
-            <ProjectCard class="mx-3" />
+      <section class="mt-10">
+        <h2 class="text-[2.5rem] md:text-[4.5rem] lg:text-xl font-bold my-8">Projects</h2>
+        <ul class="flex flex-col gap-5 md:grid md:grid-cols-2 md:gap-3 md:gap-y-3 md:justify-between">
+          <li v-for="i in 6" :key="i">
+            <ProjectCard />
           </li>
         </ul>
       </section>
-      <section class="bg-dark-grey -mx-3 px-3 py-10 text-center border-b border-white">
-        <h2 class="text-[2.5rem] font-bold leading-[2.5rem] tracking-[-0.028em] my-3">Contact</h2>
-        <p class="leading-[1.625rem]">Have a project you think I would be a great fit for? Contact me by filling the form
-          below, and I'll get back to you soon.</p>
-        <form class="flex flex-col gap-4 mt-6 caret-accent-teal">
+      <section id="contactForm"
+        class="bg-dark-grey -mx-3 mt-20 md:-mx-10 px-3  py-10 md:px-40 lg:-mx-28 lg:flex lg:justify-between text-center lg:text-start lg:px-28 lg:gap-20 border-b border-white">
+        <div class="lg:w-1/2">
+          <h2 class="text-[2.5rem] md:text-[4.5rem] lg:text-xl font-bold leading-[4.5rem] tracking-[-0.028em] my-3">
+            Contact</h2>
+          <p class="leading-[1.625rem]">Have a project you think I would be a great fit for? Contact me by filling the
+            form
+            below, and I'll get back to you soon.</p>
+        </div>
+        <form class="flex flex-col gap-4 mt-6 caret-accent-teal flex-grow">
           <input class="bg-transparent border-b border-white py-3 px-4 outline-none focus:border-accent-teal" type="text"
             placeholder="NAME">
           <input
@@ -54,11 +60,13 @@
           <textarea class="bg-transparent border-b border-white py-3 px-4 outline-none focus:border-accent-teal" rows="4"
             placeholder="MESSAGE" />
           <button type="button"
-            class="self-end border-b border-accent-teal py-2 leading-[1.625rem] tracking-[0.14em] font-bold hover:text-accent-teal">SEND
+            class="self-end border-b border-accent-teal py-2  leading-[1.625rem] tracking-[0.14em] font-bold hover:text-accent-teal">SEND
             MESSAGE</button>
         </form>
       </section>
-      <Navbar class="bg-dark-grey -mx-3 pt-6 px-3" />
+      <footer>
+        <Navbar class="bg-dark-grey -mx-3 pt-6 px-3 md:-mx-10 md:px-10 lg:-mx-28 lg:px-28" />
+      </footer>
     </div>
   </div>
 </template>
