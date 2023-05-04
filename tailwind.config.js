@@ -33,7 +33,8 @@ module.exports = {
         'primary-dark': '#151515',
         'accent-teal': '#4ee1a0',
         'dark-grey': '#242424',
-        'light-grey': 'd9d9d9',
+        'light-grey': '#d9d9d9',
+        'danger': '#ff6f5b'
       },
       backgroundImage: {
         'matano': "url('/assets/images/matano.jpg')"

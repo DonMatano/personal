@@ -1,7 +1,7 @@
 <template>
   <div class="my-4">
     <div class="relative cursor-pointer" @mouseover="updateHover(true)" @mouseleave="updateHover(false)">
-      <div v-if="state.isHoveringCard" class="bg-black/60 absolute z-10 top-0 bottom-0 left-0 right-0 ">
+      <div v-if="state.isHoveringCard" class="hidden lg:block max-w-full bg-black/60 absolute z-10 top-0 bottom-0 left-0 right-0 ">
         <div
           class="w-full h-full flex flex-col gap-9 justify-center items-center underline font-bold underline-offset-8 mt-4  decoration-accent-teal text-[1rem] uppercase leading-[1.625rem] tracking-[0.14em]">
           <a href="#" class="hover:text-accent-teal">View Project</a>
