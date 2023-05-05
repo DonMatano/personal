@@ -1,24 +1,20 @@
 <template>
-  <div class="my-4">
-    <div class="relative cursor-pointer" @mouseover="updateHover(true)" @mouseleave="updateHover(false)">
-      <div v-if="state.isHoveringCard" class="hidden lg:block max-w-full bg-black/60 absolute z-10 top-0 bottom-0 left-0 right-0 ">
-        <div
-          class="w-full h-full flex flex-col gap-9 justify-center items-center underline font-bold underline-offset-8 mt-4  decoration-accent-teal text-[1rem] uppercase leading-[1.625rem] tracking-[0.14em]">
-          <a href="#" class="hover:text-accent-teal">View Project</a>
-          <a href="#" class="hover:text-accent-teal">View Code</a>
-        </div>
+  <div 
+    class="my-4 cursor-pointer hover:border-2 hover:border-accent-teal hover:text-accent-teal w-[33.75rem] pb-3 relative"
+    @mouseenter="updateHover(true)" @mouseleave="updateHover(false)"
+  >
+    <NuxtLink>
+      <div v-if="state.isHoveringCard" class="hidden lg:block max-w-full bg-black/60 absolute z-10 top-0 bottom-0 left-0 right-0 h-[25rem] ">
+        <p class="m-auto text-center pt-6 text-white">
+          Lorem ipsum dolor sit amet consectetur adipisicing elit. Magni quis delectus quod perspiciatis. Dolorem, expedita quisquam. Veniam necessitatibus, consectetur praesentium quae, iure esse laboriosam a ullam nostrum expedita autem voluptates nesciunt perspiciatis harum provident illo minima reprehenderit, eaque ipsam? Itaque doloribus, veritatis rem odio totam accusantium aliquid distinctio ducimus vitae?
+        </p>
       </div>
-      <img class="block mb-3" src="https://placehold.co/600x400?text=Project" alt="project" />
-    </div>
-    <p class="text-m uppercase my-3 block">Lorem, ipsum dolor.</p>
-    <ul class="flex text-body text-light-grey gap-5 uppercase">
-      <li v-for="i in 3" :key="i">Lorem.</li>
-    </ul>
-    <div
-      class="flex gap-4 underline underline-offset-8 mt-4 decoration-accent-teal font-bold text-[1rem] uppercase leading-[1.625rem] tracking-[0.14em] lg:hidden">
-      <a href="#">View Project</a>
-      <a href="#">View Code</a>
-    </div>
+      <img class="block mb-3" src="https://placehold.co/540x400?text=Project" alt="project" />
+      <p class="text-m uppercase my-3 block px-2">Lorem, ipsum dolor.</p>
+      <ul class="flex text-body text-light-grey gap-5 uppercase px-2">
+        <li v-for="i in 3" :key="i">Lorem.</li>
+      </ul>
+    </NuxtLink>
   </div>
 </template>
 

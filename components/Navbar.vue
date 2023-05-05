@@ -1,6 +1,6 @@
 <template>
   <nav class="py-4 md:flex md:justify-between">
-    <h1 class="text-m text-center font-bold">matanomwakima</h1>
+    <NuxtLink to="/" class="text-m text-center font-bold">matanomwakima</NuxtLink>
     <ul class="flex justify-center my-3 gap-3 items-center">
       <li>
         <a href="#">
