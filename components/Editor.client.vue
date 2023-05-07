@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { onMounted, onBeforeUnmount, onUpdated, ref } from 'vue';
+import { onMounted, onBeforeUnmount, onUpdated, ref, reactive } from 'vue';
 import EditorJS from '@editorjs/editorjs';
 import Header from '@editorjs/header';
 import List from '@editorjs/list';
@@ -27,6 +27,10 @@ const DEFAULT_DATA: EditorJS.OutputData = {
 }
 
 let editorRef: EditorJS.default;
+interface EditorData {
+  outputData: EditorJS.OutputData | undefined,
+};
+const editorData: EditorData = reactive({ outputData: undefined })
 const htmlOutput = ref('');
 const showEdit = ref(false);
 onMounted(() => {
@@ -47,23 +51,23 @@ onMounted(() => {
         }
       },
     },
-    data: DEFAULT_DATA,
+    data: editorData?.outputData,
     // readOnly: true,
     onReady: () => {
       editorRef = editor
     },
   });
-  parseDataToHtml(DEFAULT_DATA);
+  if (editorData.outputData) {
+    parseDataToHtml(editorData.outputData);
+  }
 })
 
 onBeforeUnmount(() => {
   editorRef.destroy();
 })
 
-onUpdated(() => console.log('showEdit', showEdit));
-
 async function parseDataToHtml(contentData: EditorJS.OutputData) {
-
+  console.log('Parsing Data', contentData);
   contentData.blocks.forEach((block) => {
     switch (block.type) {
       case 'header': {
@@ -97,25 +101,26 @@ async function parseDataToHtml(contentData: EditorJS.OutputData) {
 }
 
 async function contentSaved() {
-  const contentData = await editorRef.save();
-  parseDataToHtml(contentData)
-  console.log('htmlOutput', htmlOutput);
+  try {
+    const contentData = await editorRef.save();
+    editorData.outputData = contentData;
+    parseDataToHtml(contentData);
+    showEdit.value = false;
+  } catch (error) {
+    console.error('Error saving content', error);
+  }
 }
 
 function toggleShowEdit() {
   showEdit.value = !showEdit.value;
 }
-
-
-
 </script>
 <template>
   <div class="flex flex-col gap-4">
     <div id="editorjs" v-show="showEdit" class="bg-white border border-accent-teal text-black" />
     <div v-show="!showEdit" v-html="htmlOutput" />
-    <button type="button" class="justify-end px-4 py-1 border border-accent-teal"
-      @click="toggleShowEdit">
-      {{showEdit ? 'Cancel' : 'Edit'}}
+    <button type="button" class="justify-end px-4 py-1 border border-accent-teal" @click="toggleShowEdit">
+      {{ showEdit ? 'Cancel' : 'Edit' }}
     </button>
     <button v-if="showEdit" type="button" class="justify-end px-4 py-1 border border-accent-teal" @click="contentSaved">
       Save
