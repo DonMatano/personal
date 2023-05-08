@@ -17,6 +17,13 @@ const props = defineProps({
   showModal: {type: Boolean, default: false}
 })
 
-const uppy = new Uppy().use(ImageEditor, {quality: 0.8});
+const emit = defineEmits<{
+(e: 'model_closed'): void
+}>()
+
+const uppy = new Uppy().use(ImageEditor, {quality: 0.8, cropperOptions: {aspectRatio: 27/20}});
+uppy.on('dashboard:modal-closed', () => {
+  emit('model_closed')
+})
 
 </script>

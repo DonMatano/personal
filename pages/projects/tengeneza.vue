@@ -17,7 +17,7 @@
       >
         Upload project cover page
       </button>
-      <ImageUploader :showModal="isShowingUploadCoverPageModal" />
+      <ImageUploader :showModal="isShowingUploadCoverPageModal" @model_closed="isShowingUploadCoverPageModal = false" />
       <input type="text" placeholder="Techs Used"
         class="bg-transparent border-b border-white py-3 px-4 outline-none focus:border-accent-teal" />
       <button type="button"

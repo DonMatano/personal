@@ -9,7 +9,7 @@
           Lorem ipsum dolor sit amet consectetur adipisicing elit. Magni quis delectus quod perspiciatis. Dolorem, expedita quisquam. Veniam necessitatibus, consectetur praesentium quae, iure esse laboriosam a ullam nostrum expedita autem voluptates nesciunt perspiciatis harum provident illo minima reprehenderit, eaque ipsam? Itaque doloribus, veritatis rem odio totam accusantium aliquid distinctio ducimus vitae?
         </p>
       </div>
-      <img class="block mb-3" src="https://placehold.co/540x400?text=Project" alt="project" />
+      <img class="block mb-3 aspect-[27/20]" src="https://placehold.co/540x400?text=Project" alt="project" />
       <p class="text-m uppercase my-3 block px-2">Lorem, ipsum dolor.</p>
       <ul class="flex text-body text-light-grey gap-5 uppercase px-2">
         <li v-for="i in 3" :key="i">Lorem.</li>
