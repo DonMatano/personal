@@ -10,6 +10,7 @@
       <textarea row="10" maxlength="250" placeholder="Quick project description" class="bg-transparent border-b border-white py-3 px-4 outline-none focus:border-accent-teal" />
       <div class="flex flex-col">
       <Editor />
+      <ImageUploader />
       </div>
       <input type="text" placeholder="Techs Used" class="bg-transparent border-b border-white py-3 px-4 outline-none focus:border-accent-teal" />
           <button type="button"

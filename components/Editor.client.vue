@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { onMounted, onBeforeUnmount, onUpdated, ref, reactive } from 'vue';
+import { onMounted, onBeforeUnmount, ref, reactive } from 'vue';
 import EditorJS from '@editorjs/editorjs';
 import Header from '@editorjs/header';
 import List from '@editorjs/list';

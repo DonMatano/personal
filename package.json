@@ -19,6 +19,13 @@
   "dependencies": {
     "@editorjs/editorjs": "^2.26.5",
     "@editorjs/header": "^2.7.0",
-    "@editorjs/list": "^1.8.0"
+    "@editorjs/list": "^1.8.0",
+    "@uppy/core": "^3.2.0",
+    "@uppy/dashboard": "^3.4.0",
+    "@uppy/drag-drop": "^3.0.2",
+    "@uppy/image-editor": "^2.1.2",
+    "@uppy/progress-bar": "^3.0.2",
+    "@uppy/status-bar": "^3.1.2",
+    "@uppy/vue": "^1.0.2"
   }
 }
