@@ -1,37 +1,28 @@
 <script lang="ts" setup>
-import { onMounted, onBeforeUnmount, ref, reactive } from 'vue';
+import { onMounted, onBeforeUnmount, ref, reactive, defineEmits } from 'vue';
 import EditorJS from '@editorjs/editorjs';
 import Header from '@editorjs/header';
 import List from '@editorjs/list';
 
-const DEFAULT_DATA: EditorJS.OutputData = {
-  time: Date.now(),
-  blocks: [
-    {
-      type: 'header',
-      data: {
-        text: 'Hello there',
-        level: 1,
-      }
-    },
-    {
-      type: 'list',
-      data: {
-        items: [
-          'Heoy',
-        ]
-      }
 
-    }
-  ]
-}
+const emit = defineEmits<{
+  (e: 'dataSaved', stringifiedBody: string): void
+}>();
+
+const props = defineProps({
+  bodyContent: { type: String, default: '' }
+});
+
 
 let editorRef: EditorJS.default;
 interface EditorData {
   outputData: EditorJS.OutputData | undefined,
 };
-const editorData: EditorData = reactive({ outputData: undefined })
+const editorData: EditorData = reactive({
+  outputData: undefined,
+});
 const htmlOutput = ref('');
+const stringifiedEditorData = ref('');
 const showEdit = ref(false);
 onMounted(() => {
   const editor = new EditorJS({
@@ -62,12 +53,29 @@ onMounted(() => {
   }
 })
 
+
 onBeforeUnmount(() => {
   editorRef.destroy();
 })
 
+const stringifyBodyContent = () => {
+  if (editorData) {
+    stringifiedEditorData.value = JSON.stringify(editorData.outputData);
+  }
+}
+
+const deStringifyBodyContent = () => {
+  try {
+    const res = JSON.parse(props.bodyContent) as EditorJS.OutputData;
+    editorData.outputData = res;
+  } catch (e) {
+    console.error('Error parsing bodyContent', e);
+  }
+}
+
+if (props.bodyContent) deStringifyBodyContent();
+
 async function parseDataToHtml(contentData: EditorJS.OutputData) {
-  console.log('Parsing Data', contentData);
   contentData.blocks.forEach((block) => {
     switch (block.type) {
       case 'header': {
@@ -105,6 +113,8 @@ async function contentSaved() {
     const contentData = await editorRef.save();
     editorData.outputData = contentData;
     parseDataToHtml(contentData);
+    stringifyBodyContent();
+    emit('dataSaved', stringifiedEditorData.value);
     showEdit.value = false;
   } catch (error) {
     console.error('Error saving content', error);

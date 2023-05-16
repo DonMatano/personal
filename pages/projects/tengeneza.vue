@@ -10,11 +10,9 @@
       <textarea row="10" maxlength="250" placeholder="Quick project description"
         class="bg-transparent border-b border-white py-3 px-4 outline-none focus:border-accent-teal" />
       <div class="flex flex-col">
-        <Editor />
+        <Editor  @dataSaved="bodyContentSaved" :body-content="bodyContent" />
       </div>
-      <button type="button" class="justify-end px-4 py-1 border border-accent-teal" 
-        @click="showModal"
-      >
+      <button type="button" class="justify-end px-4 py-1 border border-accent-teal" @click="showModal">
         Upload project cover page
       </button>
       <ImageUploader :showModal="isShowingUploadCoverPageModal" @model_closed="isShowingUploadCoverPageModal = false" />
@@ -27,10 +25,23 @@
 </template>
 
 <script setup lang="ts">
-import {ref} from 'vue';
+import { ref } from 'vue';
+
+const bodyContent = ref('');
 
 const isShowingUploadCoverPageModal = ref(false);
+
+onBeforeMount(() => {
+    bodyContent.value = localStorage.getItem('bodyContent') || '';
+    console.log('setData', bodyContent.value);
+});
+
+function bodyContentSaved(savedContent: string) {
+  bodyContent.value = savedContent;
+  localStorage.setItem('bodyContent', savedContent);
+}
 function showModal() {
   isShowingUploadCoverPageModal.value = !isShowingUploadCoverPageModal.value;
 }
+
 </script>
