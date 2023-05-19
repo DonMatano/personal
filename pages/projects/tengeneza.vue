@@ -16,8 +16,31 @@
         Upload project cover page
       </button>
       <ImageUploader :showModal="isShowingUploadCoverPageModal" @model_closed="isShowingUploadCoverPageModal = false" />
-      <input type="text" placeholder="Techs Used"
-        class="bg-transparent border-b border-white py-3 px-4 outline-none focus:border-accent-teal" />
+      <div class="flex items-center">
+        <select
+          multiple
+          v-model="selectedTags"
+          class="bg-transparent text-white border border-white py-3 px-4 outline-none focus:border-accent-teal w-1/4">
+          <option value="" disabled>Select Techs Used</option>
+          <option v-for="tag in tags" :value="tag.id">{{tag.name}}</option>
+        </select>
+
+        <button v-if="!isShowingAddTechForm" type="button"
+          class="border-b border-accent-teal py-2 ml-6 leading-[1.625rem] tracking-[0.14em] font-bold hover:text-accent-teal"
+          @click="isShowingAddTechForm = true">
+          ADD TECH
+        </button>
+        <form v-else class="ml-6 flex items-center gap-4"> 
+          <input v-model.trim="newTechName" type="text" placeholder="Tech Name"
+            class="bg-transparent border-b border-white py-3 px-4 outline-none focus:border-accent-teal" />
+          <button type="button"
+            class="self-end border-b border-accent-teal py-2  leading-[1.625rem] tracking-[0.14em] font-bold hover:text-accent-teal"
+            @click="addTech">
+            ADD
+          </button>
+        </form>
+      </div>
+      <div>{{selectedTags}}</div>
       <button type="button"
         class="self-end border-b border-accent-teal py-2  leading-[1.625rem] tracking-[0.14em] font-bold hover:text-accent-teal">CREATE</button>
     </form>
@@ -26,15 +49,21 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import {Tag} from '@/utils/types';
+import {v4 as uuidV4} from 'uuid';
 
 const bodyContent = ref('');
+const tags = ref<Tag[]>([{id: '1', name: 'Vue'}, {id: '2', name: 'React'}, {id: '3', name: 'Angular'}]);
 
 const isShowingUploadCoverPageModal = ref(false);
+const isShowingAddTechForm = ref(false);
+const selectedTags = ref<string[]>([]);
+const newTechName = ref('');
 
 onBeforeMount(() => {
     bodyContent.value = localStorage.getItem('bodyContent') || '';
-    console.log('setData', bodyContent.value);
 });
+
 
 function bodyContentSaved(savedContent: string) {
   bodyContent.value = savedContent;
@@ -42,6 +71,21 @@ function bodyContentSaved(savedContent: string) {
 }
 function showModal() {
   isShowingUploadCoverPageModal.value = !isShowingUploadCoverPageModal.value;
+}
+
+function addTech() {
+  if (!newTechName.value) {
+    newTechName.value = '';
+    isShowingAddTechForm.value = false;
+    return
+  };
+  const newTech = {
+    id: uuidV4(),
+    name: newTechName.value,
+  };
+  tags.value.push(newTech);
+  newTechName.value = '';
+  isShowingAddTechForm.value = false;
 }
 
 </script>

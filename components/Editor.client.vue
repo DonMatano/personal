@@ -10,7 +10,8 @@ const emit = defineEmits<{
 }>();
 
 const props = defineProps({
-  bodyContent: { type: String, default: '' }
+  bodyContent: { type: String, default: '' },
+  tags: { type: Array<String>, default: [] }
 });
 
 
@@ -76,6 +77,7 @@ const deStringifyBodyContent = () => {
 if (props.bodyContent) deStringifyBodyContent();
 
 async function parseDataToHtml(contentData: EditorJS.OutputData) {
+  htmlOutput.value = '';
   contentData.blocks.forEach((block) => {
     switch (block.type) {
       case 'header': {

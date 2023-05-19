@@ -14,7 +14,8 @@ import '@uppy/dashboard/dist/style.min.css';
 import '@uppy/image-editor/dist/style.min.css';
 
 const props = defineProps({
-  showModal: {type: Boolean, default: false}
+  showModal: {type: Boolean, default: false},
+  multiple: {type: Boolean, default: false}
 })
 
 const emit = defineEmits<{
@@ -24,6 +25,26 @@ const emit = defineEmits<{
 const uppy = new Uppy().use(ImageEditor, {quality: 0.8, cropperOptions: {aspectRatio: 27/20}});
 uppy.on('dashboard:modal-closed', () => {
   emit('model_closed')
+});
+
+uppy.addUploader((files) => {
+  console.log('files', files);
+  const [fileID] = files;
+  const file = uppy.getFile(fileID);
+  console.log('file Uplodat', file);
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      resolve();
+    }, 1000);
+  })
 })
+
+uppy.on('file-added', (file) => {
+  console.log('uppy file',file.data);
+});
+
+uppy.on('upload', (data) => {
+  console.log('uppy upload', data);
+});
 
 </script>
