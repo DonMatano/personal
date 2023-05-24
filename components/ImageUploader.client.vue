@@ -20,6 +20,7 @@ const props = defineProps({
 
 const emit = defineEmits<{
 (e: 'model_closed'): void
+(e: 'upload', data: any): void
 }>()
 
 const uppy = new Uppy().use(ImageEditor, {quality: 0.8, cropperOptions: {aspectRatio: 27/20}});
@@ -31,12 +32,7 @@ uppy.addUploader((files) => {
   console.log('files', files);
   const [fileID] = files;
   const file = uppy.getFile(fileID);
-  console.log('file Uplodat', file);
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      resolve();
-    }, 1000);
-  })
+  emit('upload', file.data);
 })
 
 uppy.on('file-added', (file) => {

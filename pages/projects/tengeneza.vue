@@ -12,10 +12,15 @@
       <div class="flex flex-col">
         <Editor  @dataSaved="bodyContentSaved" :body-content="bodyContent" />
       </div>
+      <img :src="projectCoverPageURL">
       <button type="button" class="justify-end px-4 py-1 border border-accent-teal" @click="showModal">
         Upload project cover page
       </button>
-      <ImageUploader :showModal="isShowingUploadCoverPageModal" @model_closed="isShowingUploadCoverPageModal = false" />
+      <ImageUploader
+        :showModal="isShowingUploadCoverPageModal"
+        @model_closed="isShowingUploadCoverPageModal = false" 
+        @upload="addUploadCoverImage"
+      />
       <div class="flex items-center">
         <select
           multiple
@@ -59,6 +64,13 @@ const isShowingUploadCoverPageModal = ref(false);
 const isShowingAddTechForm = ref(false);
 const selectedTags = ref<string[]>([]);
 const newTechName = ref('');
+const projectCoverPageURL = ref('');
+interface ProjectCoverPageData {
+  file: File | undefined;
+}
+const projectCoverPageData: ProjectCoverPageData = reactive({
+  file: undefined,
+});
 
 onBeforeMount(() => {
     bodyContent.value = localStorage.getItem('bodyContent') || '';
@@ -71,6 +83,12 @@ function bodyContentSaved(savedContent: string) {
 }
 function showModal() {
   isShowingUploadCoverPageModal.value = !isShowingUploadCoverPageModal.value;
+}
+
+function addUploadCoverImage(file: File) {
+  projectCoverPageData.file = file;
+  projectCoverPageURL.value = URL.createObjectURL(file);
+  isShowingUploadCoverPageModal.value = false;
 }
 
 function addTech() {
