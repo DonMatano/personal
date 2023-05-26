@@ -24,7 +24,7 @@
       <div class="flex items-center">
         <select
           multiple
-          v-model="selectedTags"
+          v-model="selectedTagsIds"
           class="bg-transparent text-white border border-white py-3 px-4 outline-none focus:border-accent-teal w-1/4">
           <option value="" disabled>Select Techs Used</option>
           <option v-for="tag in tags" :value="tag.id">{{tag.name}}</option>
@@ -45,7 +45,7 @@
           </button>
         </form>
       </div>
-      <div>{{selectedTags}}</div>
+      <TechItem v-for="tag in selectedTags" :key="tag.id" :tech="tag" @delete="deleteSelectedTech"/>
       <button type="button"
         class="self-end border-b border-accent-teal py-2  leading-[1.625rem] tracking-[0.14em] font-bold hover:text-accent-teal">CREATE</button>
     </form>
@@ -53,7 +53,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import {Tag} from '@/utils/types';
 import {v4 as uuidV4} from 'uuid';
 
@@ -62,7 +62,8 @@ const tags = ref<Tag[]>([{id: '1', name: 'Vue'}, {id: '2', name: 'React'}, {id: 
 
 const isShowingUploadCoverPageModal = ref(false);
 const isShowingAddTechForm = ref(false);
-const selectedTags = ref<string[]>([]);
+const selectedTagsIds = ref<string[]>([]);
+const selectedTags = ref<Tag[]>([]);
 const newTechName = ref('');
 const projectCoverPageURL = ref('');
 interface ProjectCoverPageData {
@@ -74,6 +75,10 @@ const projectCoverPageData: ProjectCoverPageData = reactive({
 
 onBeforeMount(() => {
     bodyContent.value = localStorage.getItem('bodyContent') || '';
+});
+
+watch(selectedTagsIds, (newVal) => {
+  selectedTags.value = newVal.map((id) => tags.value.find((tag) => tag.id === id)!);
 });
 
 
@@ -104,6 +109,10 @@ function addTech() {
   tags.value.push(newTech);
   newTechName.value = '';
   isShowingAddTechForm.value = false;
+}
+
+function deleteSelectedTech(id: string) {
+  selectedTagsIds.value = selectedTagsIds.value.filter((tagId) => tagId !== id);
 }
 
 </script>
