@@ -46,6 +46,18 @@
         </form>
       </div>
       <TechItem v-for="tag in selectedTags" :key="tag.id" :tech="tag" @delete="deleteSelectedTech"/>
+      <div class="flex flex-wrap">
+        <img v-for="fileURL in projectImagesURLs" :src="fileURL">
+      </div>
+      <button type="button" class="justify-end px-4 py-1 border border-accent-teal" @click="isShowingUploadProjectFilesModal = true">
+        Upload project file
+      </button>
+      <ImageUploader
+        multiple
+        :showModal="isShowingUploadProjectFilesModal"
+        @model_closed="isShowingUploadProjectFilesModal = false" 
+        @upload="addProjectImages"
+      />
       <button type="button"
         class="self-end border-b border-accent-teal py-2  leading-[1.625rem] tracking-[0.14em] font-bold hover:text-accent-teal">CREATE</button>
     </form>
@@ -61,17 +73,21 @@ const bodyContent = ref('');
 const tags = ref<Tag[]>([{id: '1', name: 'Vue'}, {id: '2', name: 'React'}, {id: '3', name: 'Angular'}]);
 
 const isShowingUploadCoverPageModal = ref(false);
+const isShowingUploadProjectFilesModal = ref(false);
 const isShowingAddTechForm = ref(false);
 const selectedTagsIds = ref<string[]>([]);
 const selectedTags = ref<Tag[]>([]);
 const newTechName = ref('');
 const projectCoverPageURL = ref('');
-interface ProjectCoverPageData {
+const projectImagesURLs = ref<string[]>([]);
+const projectImagesFiles = ref<File[]>([]);
+interface ProjectFileData {
   file: File | undefined;
 }
-const projectCoverPageData: ProjectCoverPageData = reactive({
+const projectCoverPageData: ProjectFileData = reactive({
   file: undefined,
 });
+
 
 onBeforeMount(() => {
     bodyContent.value = localStorage.getItem('bodyContent') || '';
@@ -94,6 +110,12 @@ function addUploadCoverImage(file: File) {
   projectCoverPageData.file = file;
   projectCoverPageURL.value = URL.createObjectURL(file);
   isShowingUploadCoverPageModal.value = false;
+}
+
+function addProjectImages(files: File[]) {
+  projectImagesFiles.value = files;
+  projectImagesURLs.value = files.map((file) => URL.createObjectURL(file));
+  isShowingUploadProjectFilesModal.value = false;
 }
 
 function addTech() {

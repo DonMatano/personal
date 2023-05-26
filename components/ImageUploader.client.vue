@@ -29,7 +29,11 @@ uppy.on('dashboard:modal-closed', () => {
 });
 
 uppy.addUploader((files) => {
-  console.log('files', files);
+  if (props.multiple) {
+    const filesData = files.map((fileId) => uppy.getFile(fileId).data);
+    emit('upload', filesData);
+    return;
+  }
   const [fileID] = files;
   const file = uppy.getFile(fileID);
   emit('upload', file.data);
