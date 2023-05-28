@@ -40,8 +40,9 @@
             class="bg-transparent border-b border-white py-3 px-4 outline-none focus:border-accent-teal" />
           <button type="button"
             class="self-end border-b border-accent-teal py-2  leading-[1.625rem] tracking-[0.14em] font-bold hover:text-accent-teal"
+            :disabled="isAddingTech"
             @click="addTech">
-            ADD
+            {{ isAddingTech ? 'ADDING' : 'ADD' }}
           </button>
         </form>
       </div>
@@ -68,9 +69,36 @@
 import { ref, watch } from 'vue';
 import {Tag} from '@/utils/types';
 import {v4 as uuidV4} from 'uuid';
+import { Database } from '~/utils/database.types';
+
+const supabaseClient = useSupabaseClient<Database>();
+
+const getTags = async () => {
+  const {data, error} = await supabaseClient
+  .from('tags')
+  .select('id, text');
+  if (error) {
+    throw error;
+  }
+  const tags = data?.map((tag) => ({
+    id: tag.id,
+    name: tag.text,
+  })) || [];
+  return tags;
+};
+
+const {data, error, refresh} = await useAsyncData('tags', async () => {
+  return getTags();
+});
+
+if (error.value) {
+  console.error(error.value);
+}
+const tags = ref<Tag[]>(data.value || []);
+
+console.log('tags', tags.value);
 
 const bodyContent = ref('');
-const tags = ref<Tag[]>([{id: '1', name: 'Vue'}, {id: '2', name: 'React'}, {id: '3', name: 'Angular'}]);
 
 const isShowingUploadCoverPageModal = ref(false);
 const isShowingUploadProjectFilesModal = ref(false);
@@ -78,6 +106,7 @@ const isShowingAddTechForm = ref(false);
 const selectedTagsIds = ref<string[]>([]);
 const selectedTags = ref<Tag[]>([]);
 const newTechName = ref('');
+const isAddingTech = ref(false);
 const projectCoverPageURL = ref('');
 const projectImagesURLs = ref<string[]>([]);
 const projectImagesFiles = ref<File[]>([]);
@@ -118,19 +147,38 @@ function addProjectImages(files: File[]) {
   isShowingUploadProjectFilesModal.value = false;
 }
 
-function addTech() {
+async function addTech() {
+  try {
   if (!newTechName.value) {
     newTechName.value = '';
     isShowingAddTechForm.value = false;
     return
   };
+  isAddingTech.value = true;
   const newTech = {
     id: uuidV4(),
-    name: newTechName.value,
+    name: newTechName.value.toLowerCase(),
   };
+  const {error} = await supabaseClient
+    .from('tags')
+    .insert([
+      {
+        id: newTech.id,
+        text: newTech.name,
+      },
+    ]);
+  if (error) {
+    console.error(error);
+    isAddingTech.value = false;
+    return;
+  }
   tags.value.push(newTech);
   newTechName.value = '';
   isShowingAddTechForm.value = false;
+} catch (error) {
+  console.error(error);
+  isAddingTech.value = false;
+}
 }
 
 function deleteSelectedTech(id: string) {
