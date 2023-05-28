@@ -27,7 +27,7 @@
           v-model="selectedTagsIds"
           class="bg-transparent text-white border border-white py-3 px-4 outline-none focus:border-accent-teal w-1/4">
           <option value="" disabled>Select Techs Used</option>
-          <option v-for="tag in tags" :value="tag.id">{{tag.name}}</option>
+          <option v-for="tag in tags" :value="tag.id" class="uppercase">{{tag.name}}</option>
         </select>
 
         <button v-if="!isShowingAddTechForm" type="button"
@@ -46,7 +46,9 @@
           </button>
         </form>
       </div>
-      <TechItem v-for="tag in selectedTags" :key="tag.id" :tech="tag" @delete="deleteSelectedTech"/>
+      <div class="flex flex-wrap gap-2">
+        <TechItem v-for="tag in selectedTags" :key="tag.id" :tech="tag" @delete="deleteSelectedTech"/>
+      </div>
       <div class="flex flex-wrap">
         <img v-for="fileURL in projectImagesURLs" :src="fileURL">
       </div>
@@ -155,24 +157,25 @@ async function addTech() {
     return
   };
   isAddingTech.value = true;
-  const newTech = {
-    id: uuidV4(),
-    name: newTechName.value.toLowerCase(),
-  };
+  const listOfTechsToAdd = newTechName.value.split(',').map((tech) => {
+    tech.trim()
+    return {
+      id: uuidV4(),
+      name: tech.toLowerCase(),
+    };
+  });
   const {error} = await supabaseClient
     .from('tags')
-    .insert([
-      {
-        id: newTech.id,
-        text: newTech.name,
-      },
-    ]);
+    .insert(listOfTechsToAdd.map((tech) => ({
+      id: tech.id,
+      text: tech.name,
+    })));
   if (error) {
     console.error(error);
     isAddingTech.value = false;
     return;
   }
-  tags.value.push(newTech);
+  tags.value.push(...listOfTechsToAdd);
   newTechName.value = '';
   isShowingAddTechForm.value = false;
 } catch (error) {
