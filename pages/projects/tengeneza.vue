@@ -73,6 +73,12 @@ import {Tag} from '@/utils/types';
 import {v4 as uuidV4} from 'uuid';
 import { Database } from '~/utils/database.types';
 
+definePageMeta({
+  title: 'Tengeneza',
+  description: 'Create a new project',
+  middleware: 'auth'
+});
+
 const supabaseClient = useSupabaseClient<Database>();
 
 const getTags = async () => {
