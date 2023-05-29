@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen">
+  <div v-if="!isSignedIn" class="min-h-screen">
     <form class="flex flex-col">
       <input type="email" placeholder="email" v-model="email"
         class="bg-transparent border-b border-white py-3 px-4 outline-none focus:border-accent-teal" />
@@ -10,11 +10,17 @@
     <p class="text-red-500">{{ invalidError }}</p>
     <p v-if="showSuccess" class="text-green-500">Successfully Signed in</p>
   </div>
+  <button v-else @click.prevent="signout">
+    Sign out
+  </button>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
 const client = useSupabaseAuthClient();
+const user = useSupabaseUser();
+
+const isSignedIn = !!user.value;
 
 
 const email = ref('');
@@ -39,6 +45,11 @@ async function login() {
   setTimeout(() => {
     navigateTo('/')
   }, 3000);
+}
+
+async function signout() {
+  await client.auth.signOut();
+  navigateTo('/');
 }
 
 </script>

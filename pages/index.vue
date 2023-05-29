@@ -36,7 +36,7 @@
       <div class="flex justify-between items-center">
         <h2 class="text-[2.5rem] md:text-[4.5rem] lg:text-xl font-bold my-8">Projects</h2>
         <div>
-        <NuxtLink to="/projects/tengeneza"
+        <NuxtLink v-if="isSignedIn" to="/projects/tengeneza"
           class="uppercase underline mr-3 underline-offset-8 decoration-accent-teal mt-10 text-body font-bold tracking-[2.29px]">
           Create new project
         </NuxtLink>
@@ -50,6 +50,13 @@
     </section>
   </div>
 </template>
+
+<script setup lang="ts">
+
+const user = useSupabaseUser();
+const isSignedIn = !!user.value;
+
+</script>
 
 <style lang="css">
 html {
