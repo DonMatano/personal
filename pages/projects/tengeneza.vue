@@ -6,9 +6,13 @@
 
     <form class="flex flex-col gap-4">
       <input type="text" placeholder="Project Name"
-        class="bg-transparent border-b border-white py-3 px-4 outline-none focus:border-accent-teal" />
+        class="bg-transparent border-b border-white py-3 px-4 outline-none focus:border-accent-teal"
+        v-model="projectName"
+      />
       <textarea row="10" maxlength="250" placeholder="Quick project description"
-        class="bg-transparent border-b border-white py-3 px-4 outline-none focus:border-accent-teal" />
+        class="bg-transparent border-b border-white py-3 px-4 outline-none focus:border-accent-teal"
+        v-model="projectDescription"
+      />
       <div class="flex flex-col">
         <Editor  @dataSaved="bodyContentSaved" :body-content="bodyContent" />
       </div>
@@ -20,6 +24,10 @@
         :showModal="isShowingUploadCoverPageModal"
         @model_closed="isShowingUploadCoverPageModal = false" 
         @upload="addUploadCoverImage"
+      />
+      <input v-if="projectCoverPageURL" type="text" placeholder="Cover Image Caption"
+        class="bg-transparent border-b border-white py-3 px-4 outline-none focus:border-accent-teal"
+        v-model="coverImageCaption"
       />
       <div class="flex items-center">
         <select
@@ -53,16 +61,22 @@
         <img v-for="fileURL in projectImagesURLs" :src="fileURL">
       </div>
       <button type="button" class="justify-end px-4 py-1 border border-accent-teal" @click="isShowingUploadProjectFilesModal = true">
-        Upload project file
+        Upload project files
       </button>
       <ImageUploader
         multiple
         :showModal="isShowingUploadProjectFilesModal"
-        @model_closed="isShowingUploadProjectFilesModal = false" 
+        @model_closed="isShowingUploadProjectFilesModal = false"
         @upload="addProjectImages"
       />
       <button type="button"
-        class="self-end border-b border-accent-teal py-2  leading-[1.625rem] tracking-[0.14em] font-bold hover:text-accent-teal">CREATE</button>
+        :disabled="submitting"
+        class="self-end border-b border-accent-teal py-2  leading-[1.625rem] tracking-[0.14em] font-bold hover:text-accent-teal"
+        @click="createProject"
+      >
+        {{ buttonLabel }}
+      </button>
+      <p v-if="errorText" class=" text-red-400">Error: {{ errorText }}</p>
     </form>
   </div>
 </template>
@@ -95,7 +109,7 @@ const getTags = async () => {
   return tags;
 };
 
-const {data, error, refresh} = await useAsyncData('tags', async () => {
+const {data, error } = await useAsyncData('tags', async () => {
   return getTags();
 });
 
@@ -104,7 +118,7 @@ if (error.value) {
 }
 const tags = ref<Tag[]>(data.value || []);
 
-console.log('tags', tags.value);
+const router = useRouter();
 
 const bodyContent = ref('');
 
@@ -116,18 +130,19 @@ const selectedTags = ref<Tag[]>([]);
 const newTechName = ref('');
 const isAddingTech = ref(false);
 const projectCoverPageURL = ref('');
+const coverImageCaption = ref('');
 const projectImagesURLs = ref<string[]>([]);
 const projectImagesFiles = ref<File[]>([]);
+const projectName = ref('');
+const projectDescription = ref('');
+const submitting = ref(false);
+const buttonLabel = ref('CREATE');
+const errorText = ref('');
 interface ProjectFileData {
   file: File | undefined;
 }
 const projectCoverPageData: ProjectFileData = reactive({
   file: undefined,
-});
-
-
-onBeforeMount(() => {
-    bodyContent.value = localStorage.getItem('bodyContent') || '';
 });
 
 watch(selectedTagsIds, (newVal) => {
@@ -137,7 +152,6 @@ watch(selectedTagsIds, (newVal) => {
 
 function bodyContentSaved(savedContent: string) {
   bodyContent.value = savedContent;
-  localStorage.setItem('bodyContent', savedContent);
 }
 function showModal() {
   isShowingUploadCoverPageModal.value = !isShowingUploadCoverPageModal.value;
@@ -193,5 +207,131 @@ async function addTech() {
 function deleteSelectedTech(id: string) {
   selectedTagsIds.value = selectedTagsIds.value.filter((tagId) => tagId !== id);
 }
+
+const uploadImages = async (files: File[]) => {
+  const time = new Date().getTime();
+  const uploads = files.map(async (file) => {
+    const {error} = await supabaseClient
+      .storage
+      .from('projectFiles')
+      .upload(`files/${file.name}-${time}`, file);
+    if (error) {
+      throw error;
+    }
+    const {data: {publicUrl}} = supabaseClient
+      .storage
+      .from('projectFiles')
+      .getPublicUrl(`files/${file.name}-${time}`);
+    return publicUrl;
+    })
+  const urls = await Promise.all(uploads);
+  return urls;
+}
+
+type Image = {
+  url: string;
+  caption: string;
+}
+
+const saveImagesToDB = async (images: Image[]) => {
+  const {error} = await supabaseClient
+    .from('images')
+    .insert(images);
+  if (error) {
+    throw error;
+  }
+}
+
+const validateForm = () => {
+  if (!projectName.value) {
+    errorText.value = 'Project name is required';
+    return false;
+  }
+  if (!projectDescription.value) {
+    errorText.value = 'Project description is required';
+    return false;
+  }
+  if (!bodyContent.value) {
+    errorText.value = 'Project overview is required';
+    return false;
+  }
+  if (!projectCoverPageData.file) {
+    errorText.value = 'Project cover image is required';
+    return false;
+  }
+  return true;
+}
+
+async function createProject() {
+  errorText.value = '';
+  submitting.value = true;
+  buttonLabel.value = 'CREATING...';
+  if (!validateForm()) {
+    submitting.value = false;
+    buttonLabel.value = 'CREATE';
+    return;
+  }
+  try {
+    const projectId = uuidV4();
+    const projectTitle = projectName.value;
+    const description = projectDescription.value;
+    const overview = bodyContent.value;
+    const coverImage = projectCoverPageData.file;
+    let coverImageURL = '';
+    if (coverImage) {
+      [coverImageURL] = await uploadImages([coverImage]);
+    }
+    if (!coverImageURL) {
+      throw new Error('Cover image is required');
+    }
+    // Store Cover Image to DB
+    await saveImagesToDB([{
+      url: coverImageURL,
+      caption: coverImageCaption.value,
+    }]);
+    // Store Project Images to DB
+    const {error} = await supabaseClient
+      .from('projects')
+      .insert({
+        id: projectId,
+        title: projectTitle,
+        description,
+        overview_body: overview,
+        cover_image: coverImageURL,
+      });
+    if (error) {
+      submitting.value = false;
+      buttonLabel.value = 'CREATE';
+      errorText.value = error.message;
+    };
+
+    // Store Project Tags to DB
+    const projectTags = selectedTagsIds.value.map((tagId) => ({
+      id: uuidV4(),
+      project_id: projectId,
+      tag_id: tagId,
+    }));
+    const {error: projectTagsError} = await supabaseClient
+      .from('projects_tags')
+      .insert(projectTags);
+
+    if (projectTagsError) {
+      submitting.value = false;
+      buttonLabel.value = 'CREATE';
+      errorText.value = projectTagsError.message;
+    }
+    buttonLabel.value = 'CREATED';
+
+    setTimeout(() => {
+      router.push(`/`);
+    }, 1500);
+
+  } catch (e) {
+    submitting.value = false;
+    buttonLabel.value = 'CREATE';
+    errorText.value = 'Something went wrong: ' + e;
+    console.error(e);
+  }
+};
 
 </script>

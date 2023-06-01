@@ -46,15 +46,108 @@
         </NuxtLink>
         </div>
       </div>
-      <ProjectList />
+      <ProjectList :projects="projectWithTags || []" />
     </section>
   </div>
 </template>
 
 <script setup lang="ts">
+import { Database } from '~/utils/database.types';
+import { Project } from '~/utils/types';
+import { Tag } from '~/utils/types';
+
 
 const user = useSupabaseUser();
+const supabaseClient = useSupabaseClient<Database>();
 const isSignedIn = !!user.value;
+
+
+const getTags = async () => {
+  const {data, error} = await supabaseClient
+  .from('tags')
+  .select('id, text');
+  if (error) {
+    throw error;
+  }
+  console.log('tags', data);
+  const tags = data?.map((tag) => ({
+    id: tag.id,
+    name: tag.text,
+  })) || [];
+  return tags;
+};
+
+const {data: tags, error: tagsError } = await useAsyncData('tags', async () => {
+  return getTags();
+});
+
+if (tagsError) {
+  console.error(tagsError);
+}
+
+const {data: projectData, error} = await useAsyncData('projects', async () => {
+  const {data, error} = await supabaseClient
+    .from('projects')
+    .select(`
+      id,
+      title,
+      description,
+      created_at,
+      overview_body,
+      cover_image`
+    );
+  if (error) {
+    throw error;
+  }
+  const projectsRes = data?.map(async (project) => {
+    const {data: projectTags, error} = await supabaseClient
+      .from('projects_tags')
+      .select('tag_id')
+      .eq('project_id', project.id);
+    if (error) {
+      throw error;
+    }
+    return {
+    id: project.id,
+    title: project.title,
+    description: project.description,
+    overviewBody: project.overview_body,
+    coverImageURL: project.cover_image,
+    tagsIds: projectTags.map((projectTag) => projectTag.tag_id),
+    };
+  }) || [];
+  const projects = await Promise.all(projectsRes);
+  return projects;
+});
+if (error) {
+  console.error(error);
+}
+
+const allAvailableTags = ref<Tag[]>(tags?.value || []);
+const projectWithTags = computed(() => {
+  if (!projectData.value?.length || !allAvailableTags.value.length) {
+    return [];
+  }
+  return projectData.value?.map((project) => {
+    const projectTags: Tag[] = project.tagsIds.map((tagId) => {
+      const foundTags = allAvailableTags.value.find((tag) => tag.id === tagId);
+      return foundTags;
+    }).filter((tag) => tag !== undefined) as Tag[];
+    const ans = {
+      ...project,
+      tags: projectTags,
+    };
+    const rest: Project = {
+      id: ans.id,
+      title: ans.title,
+      description: ans.description || '',
+      overviewBody: ans.overviewBody || '',
+      coverImageURL: ans.coverImageURL || '',
+      tags: projectTags,
+    };
+    return rest;
+  }) || [];
+});
 
 </script>
 
