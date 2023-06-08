@@ -46,7 +46,7 @@
         </NuxtLink>
         </div>
       </div>
-      <ProjectList :projects="projectWithTags || []" />
+      <ProjectList :projects="projectWithTags" />
     </section>
   </div>
 </template>
@@ -123,32 +123,32 @@ if (error) {
   console.error(error);
 }
 
-const allAvailableTags = ref<Tag[]>(tags?.value || []);
-const projectWithTags = computed(() => {
-  if (!projectData.value?.length || !allAvailableTags.value.length) {
-    return [];
+// const allAvailableTags = ref<Tag[]>(tags?.value || []);
+const allAvailableTags = useState('tags', () => tags?.value || []);
+const projectWithTags = ref<Project[]>([]);
+useState('projects', () => projectData?.value || []);
+  if (projectData.value && projectData.value.length) {
+    projectWithTags.value = projectData.value?.map((project) => {
+      const projectTags: Tag[] = project.tagsIds.map((tagId) => {
+        const foundTags = allAvailableTags.value.find((tag) => tag.id === tagId);
+        return foundTags;
+      }).filter((tag) => tag !== undefined) as Tag[];
+      const ans = {
+        ...project,
+        tags: projectTags,
+      };
+      const rest: Project = {
+        id: ans.id,
+        title: ans.title,
+        description: ans.description || '',
+        overviewBody: ans.overviewBody || '',
+        coverImageURL: ans.coverImageURL || '',
+        tags: projectTags,
+      };
+      return rest;
+    });
   }
-  return projectData.value?.map((project) => {
-    const projectTags: Tag[] = project.tagsIds.map((tagId) => {
-      const foundTags = allAvailableTags.value.find((tag) => tag.id === tagId);
-      return foundTags;
-    }).filter((tag) => tag !== undefined) as Tag[];
-    const ans = {
-      ...project,
-      tags: projectTags,
-    };
-    const rest: Project = {
-      id: ans.id,
-      title: ans.title,
-      description: ans.description || '',
-      overviewBody: ans.overviewBody || '',
-      coverImageURL: ans.coverImageURL || '',
-      tags: projectTags,
-    };
-    return rest;
-  }) || [];
-});
-
+  const projects = useState('projects', () => projectWithTags.value || []);
 </script>
 
 <style lang="css">

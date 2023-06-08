@@ -23,6 +23,7 @@
     "@editorjs/editorjs": "^2.26.5",
     "@editorjs/header": "^2.7.0",
     "@editorjs/list": "^1.8.0",
+    "@splidejs/vue-splide": "^0.6.12",
     "@uppy/core": "^3.2.0",
     "@uppy/dashboard": "^3.4.0",
     "@uppy/drag-drop": "^3.0.2",
