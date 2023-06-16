@@ -8,21 +8,6 @@
       <SplideSlide v-for="(url) in props.imagesUrls" :key="url">
         <img :src="url" :alt="url" />
       </SplideSlide>
-      <SplideSlide>
-        <img src="https://picsum.photos/800/300" alt="image" />
-      </SplideSlide>
-      <SplideSlide>
-        <img src="https://picsum.photos/800/300" alt="image" />
-      </SplideSlide>
-      <SplideSlide>
-        <img src="https://picsum.photos/800/300" alt="image" />
-      </SplideSlide>
-      <SplideSlide>
-        <img src="https://picsum.photos/800/300" alt="image" />
-      </SplideSlide>
-      <SplideSlide>
-        <img src="https://picsum.photos/800/300" alt="image" />
-      </SplideSlide>
     </Splide>
   </div>
   <div v-show="showModal" class="relative z-20" aria-labelledby="modal-title" role="dialog" aria-modal="true">
@@ -62,8 +47,8 @@
             aria-label="Close"
           >Close Modal</button>
           <Splide ref="mainCarousel" :options="mainOptions">
-            <SplideSlide v-for="i in 6" :key="i">
-              <img src="https://picsum.photos/1400/980" alt="image" />
+            <SplideSlide v-for="(url) in props.imagesUrls" :key="url">
+              <img :src="url" :alt="url" />
             </SplideSlide>
           </Splide>
         </div>
@@ -120,6 +105,7 @@ const thumbsOptions: Options = {
 
 function handleThumbImageClick(slide: InstanceType<typeof Splide>) {
   const index = slide.index ;
+  console.log(index);
   showModal.value = true;
   mainCarousel.value?.go(index);
 }
