@@ -10,6 +10,10 @@ const emit = defineEmits<{
 }>();
 
 const props = defineProps({
+  canEdit : {
+    type: Boolean,
+    default: false,
+  },
   bodyContent: { type: String, default: '' },
   tags: { type: Array<String>, default: [] }
 });
@@ -131,7 +135,7 @@ function toggleShowEdit() {
   <div class="flex flex-col gap-4">
     <div id="editorjs" v-show="showEdit" class="bg-white border border-accent-teal text-black" />
     <div v-show="!showEdit" v-html="htmlOutput" />
-    <button type="button" class="justify-end px-4 py-1 border border-accent-teal" @click="toggleShowEdit">
+    <button v-if="canEdit" type="button" class="justify-end px-4 py-1 border border-accent-teal" @click="toggleShowEdit">
       {{ showEdit ? 'Cancel' : 'Edit' }}
     </button>
     <button v-if="showEdit" type="button" class="justify-end px-4 py-1 border border-accent-teal" @click="contentSaved">

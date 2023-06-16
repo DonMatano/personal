@@ -5,29 +5,54 @@
       <h3 class="text-[2rem] md:text-[4rem] inline-block lg:text-l font-bold my-8">
         {{ state.selectedProject.title }}
       </h3>
-      <NuxtLink 
-        to="#"
-        class="uppercase block underline underline-offset-8 decoration-accent-teal mt-10 text-body font-bold tracking-[2.29px] hover:text-accent-teal">
-        Edit Project
-      </NuxtLink>
+      <div class="flex gap-6">
+        <a
+          v-if="state.selectedProject.demoLinkURL"
+          :href="state.selectedProject.demoLinkURL"
+          class="uppercase block underline underline-offset-8 decoration-accent-teal mt-10 text-body font-bold tracking-[2.29px] hover:text-accent-teal"
+          target="_blank"
+          >
+          View Project Demo
+        </a>
+        <a
+          v-if="state.selectedProject.githubLinkURL"
+          :href="state.selectedProject.githubLinkURL"
+          class="uppercase block underline underline-offset-8 decoration-accent-teal mt-10 text-body font-bold tracking-[2.29px] hover:text-accent-teal"
+          target="_blank"
+          >
+          View Project Code on Github
+        </a>
+        <NuxtLink
+          v-if="isSignedIn"
+          to="#"
+          class="uppercase block underline underline-offset-8 decoration-accent-teal mt-10 text-body font-bold tracking-[2.29px] hover:text-accent-teal">
+          Edit Project
+        </NuxtLink>
+      </div>
     </div>
     <p class="text-body">{{ state.selectedProject.description }}</p>
+
+    <Editor class="my-5" :body-content="state.selectedProject.overviewBody"/>
 
     <h3 class="text-[2rem] md:text-[4rem] lg:text-l font-bold my-8">
       Technology used
     </h3>
-    <Carousel class="my-5 w-fit"/>
     <ul class="grid grid-cols-2 gap-5 text-center md:grid-cols-3 text-m">
-      <li v-for="tag in state.selectedProject.tags" :key="tag.id">
+      <li
+        v-if="state.selectedProject.tags"
+        v-for="tag in state.selectedProject.tags" :key="tag.id">
         {{ tag.name }}
       </li>
     </ul>
+    <Carousel
+      v-if="state.selectedProject.images && state.selectedProject.images.length > 0"
+     :images-urls="state.selectedProject.images.map((image) => image.url)" class="my-5 w-fit" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { Database } from '~/utils/database.types';
-import { Project, Tag } from '~/utils/types';
+import { Project, Tag, Image } from '~/utils/types';
 
 const route = useRoute();
 const router = useRouter();
@@ -35,22 +60,7 @@ const user = useSupabaseUser();
 const supabaseClient = useSupabaseClient<Database>();
 const isSignedIn = !!user.value;
 const { id } = route.params;
-const getTags = async () : Promise<Tag[]> => {
-  const {data, error} = await supabaseClient
-  .from('tags')
-  .select('id, text');
-  if (error) {
-    throw error;
-  }
-  console.log('tags', data);
-  const tags = data?.map((tag) => ({
-    id: tag.id,
-    name: tag.text,
-  })) || [];
-  return tags;
-};
 const projects = useState<Project[]>('projects');
-const tags = useState<Tag[]>('tags');
 const getProject = async () : Promise<Project> => {
   const {data, error} = await supabaseClient
   .from('projects')
@@ -60,17 +70,50 @@ const getProject = async () : Promise<Project> => {
   if (error || !data) {
     throw error || new Error('Project not found');
   }
-  if (!tags.value || tags.value.length === 0) {
-    tags.value = await getTags();
-    useState('tags', () => tags.value);
-  }
+    const {data: projectTags, error: projectTagsError} = await supabaseClient
+      .from('projects_tags')
+      .select('tags(id, text)')
+      .eq('project_id', id);
+    console.log({projectTags, projectTagsError});
+    if (projectTagsError) {
+      throw projectTagsError;
+    }
+    const tags = projectTags.map(({tags}) => {
+      if (tags) {
+        return {
+          id: tags.id,
+          name: tags.text,
+        };
+      }
+    }).filter(tag => tag !== undefined) as Tag[];
+    const {data: projectImages, error: imagesError} = await supabaseClient
+      .from('projects_images')
+      .select('images(url, caption)')
+      .eq('project_id', id);
+
+    console.log({projectImages, imagesError});
+    if (imagesError) {
+      throw imagesError;
+    }
+
+    const images = projectImages?.map(({images}) => {
+      if (images) {
+        return {
+          url: images.url,
+          caption: images.caption || '',
+        };
+      }
+    }).filter(image => image !== undefined) as Image[];
 
   return  {
     id: data.id,
     title: data.title,
     description: data.description || '',
     coverImageURL: data.cover_image || '',
-    tags: [],
+    tags,
+    images,
+    githubLinkURL: data.github_link || '',
+    demoLinkURL: data.hosting_link || '',
     overviewBody: data.overview_body || '',
   };
 };
@@ -86,22 +129,20 @@ const state = reactive<State>(
     description: '',
     coverImageURL: '',
     tags: [],
+    images: [],
     overviewBody: '',
+    githubLinkURL: '',
+    demoLinkURL: '',
 }});
 
-if (!projects.value || projects.value.length === 0) {
-   state.selectedProject = await getProject();
-} else {
-  const project = projects.value.find((project) => project.id === id);
+onMounted(async () => {
+  let project = projects.value?.find((project) => project.id === id);
   if (!project) {
-    console.error('Project not found');
-  } else {
-    state.selectedProject = project;
+    project = await getProject();
   }
-}
-onMounted(() => {
-  console.log('mounted');
-  console.log('projects', projects);
-  console.log('tags', tags);
+  if (!project) {
+    router.push('/404');
+  }
+  state.selectedProject = project;
 });
 </script>

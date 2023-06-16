@@ -53,37 +53,11 @@
 
 <script setup lang="ts">
 import { Database } from '~/utils/database.types';
-import { Project } from '~/utils/types';
-import { Tag } from '~/utils/types';
-
+import { Project, Tag, Image } from '~/utils/types';
 
 const user = useSupabaseUser();
 const supabaseClient = useSupabaseClient<Database>();
 const isSignedIn = !!user.value;
-
-
-const getTags = async () => {
-  const {data, error} = await supabaseClient
-  .from('tags')
-  .select('id, text');
-  if (error) {
-    throw error;
-  }
-  console.log('tags', data);
-  const tags = data?.map((tag) => ({
-    id: tag.id,
-    name: tag.text,
-  })) || [];
-  return tags;
-};
-
-const {data: tags, error: tagsError } = await useAsyncData('tags', async () => {
-  return getTags();
-});
-
-if (tagsError) {
-  console.error(tagsError);
-}
 
 const {data: projectData, error} = await useAsyncData('projects', async () => {
   const {data, error} = await supabaseClient
@@ -94,6 +68,8 @@ const {data: projectData, error} = await useAsyncData('projects', async () => {
       description,
       created_at,
       overview_body,
+      github_link,
+      hosting_link,
       cover_image`
     );
   if (error) {
@@ -102,53 +78,82 @@ const {data: projectData, error} = await useAsyncData('projects', async () => {
   const projectsRes = data?.map(async (project) => {
     const {data: projectTags, error} = await supabaseClient
       .from('projects_tags')
-      .select('tag_id')
+      .select('tags(id, text)')
       .eq('project_id', project.id);
     if (error) {
       throw error;
     }
+    const tags = projectTags.map(({tags}) => {
+      if (tags) {
+        return {
+          id: tags.id,
+          name: tags.text,
+        };
+      }
+    }).filter(tag => tag !== undefined) as Tag[];
+    const {data: projectImages, error: imagesError} = await supabaseClient
+      .from('projects_images')
+      .select('images(url, caption)')
+      .eq('project_id', project.id);
+
+    if (imagesError) {
+      throw imagesError;
+    }
+
+    const images = projectImages?.map(({images}) => {
+      if (images) {
+        return {
+          url: images.url,
+          caption: images.caption || '',
+        };
+      }
+    }).filter(image => image !== undefined) as Image[];
+
     return {
     id: project.id,
     title: project.title,
     description: project.description,
     overviewBody: project.overview_body,
     coverImageURL: project.cover_image,
-    tagsIds: projectTags.map((projectTag) => projectTag.tag_id),
+    githubLinkURL: project.github_link,
+    demoLinkURL: project.hosting_link,
+    tags,
+    images,
     };
   }) || [];
   const projects = await Promise.all(projectsRes);
-  return projects;
+  return projects as Project[];
 });
 if (error) {
   console.error(error);
 }
 
-// const allAvailableTags = ref<Tag[]>(tags?.value || []);
-const allAvailableTags = useState('tags', () => tags?.value || []);
-const projectWithTags = ref<Project[]>([]);
-useState('projects', () => projectData?.value || []);
-  if (projectData.value && projectData.value.length) {
-    projectWithTags.value = projectData.value?.map((project) => {
-      const projectTags: Tag[] = project.tagsIds.map((tagId) => {
-        const foundTags = allAvailableTags.value.find((tag) => tag.id === tagId);
-        return foundTags;
-      }).filter((tag) => tag !== undefined) as Tag[];
-      const ans = {
-        ...project,
-        tags: projectTags,
-      };
-      const rest: Project = {
-        id: ans.id,
-        title: ans.title,
-        description: ans.description || '',
-        overviewBody: ans.overviewBody || '',
-        coverImageURL: ans.coverImageURL || '',
-        tags: projectTags,
-      };
-      return rest;
-    });
-  }
-  const projects = useState('projects', () => projectWithTags.value || []);
+const projectWithTags = ref<Project[]>(projectData?.value|| []);
+// useState('projects', () => projectData?.value || []);
+//   if (projectData.value && projectData.value.length) {
+//     projectWithTags.value = projectData.value?.map((project) => {
+//       const projectTags: Tag[] = project.tagsIds.map((tagId) => {
+//         const foundTags = allAvailableTags.value.find((tag) => tag.id === tagId);
+//         return foundTags;
+//       }).filter((tag) => tag !== undefined) as Tag[];
+//       const ans = {
+//         ...project,
+//         tags: projectTags,
+//       };
+//       const rest: Project = {
+//         id: ans.id,
+//         title: ans.title,
+//         description: ans.description || '',
+//         overviewBody: ans.overviewBody || '',
+//         coverImageURL: ans.coverImageURL || '',
+//         githubLinkURL: ans.githubLink || '',
+//         demoLinkURL: ans.demoLink || '',
+//         tags: projectTags,
+//       };
+//       return rest;
+//     });
+//   }
+  useState('projects', () => projectWithTags.value || []);
 </script>
 
 <style lang="css">

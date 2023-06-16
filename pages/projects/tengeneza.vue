@@ -9,14 +9,26 @@
         class="bg-transparent border-b border-white py-3 px-4 outline-none focus:border-accent-teal"
         v-model="projectName"
       />
+      <input type="text" placeholder="Demo Link"
+        class="bg-transparent border-b border-white py-3 px-4 outline-none focus:border-accent-teal"
+        v-model="demoLink"
+      />
+      <input type="text" placeholder="Github Link"
+        class="bg-transparent border-b border-white py-3 px-4 outline-none focus:border-accent-teal"
+        v-model="projectGithubURL"
+        />
       <textarea row="10" maxlength="250" placeholder="Quick project description"
         class="bg-transparent border-b border-white py-3 px-4 outline-none focus:border-accent-teal"
         v-model="projectDescription"
       />
       <div class="flex flex-col">
-        <Editor  @dataSaved="bodyContentSaved" :body-content="bodyContent" />
+        <Editor  @dataSaved="bodyContentSaved" :body-content="bodyContent" can-edit />
       </div>
-      <img :src="projectCoverPageURL">
+      <img
+        v-if="projectCoverPageURL"
+        :src="projectCoverPageURL"
+        class="w-full h-96 object-cover object-center"
+      />
       <button type="button" class="justify-end px-4 py-1 border border-accent-teal" @click="showModal">
         Upload project cover page
       </button>
@@ -134,6 +146,8 @@ const coverImageCaption = ref('');
 const projectImagesURLs = ref<string[]>([]);
 const projectImagesFiles = ref<File[]>([]);
 const projectName = ref('');
+const demoLink = ref('');
+const projectGithubURL = ref('');
 const projectDescription = ref('');
 const submitting = ref(false);
 const buttonLabel = ref('CREATE');
@@ -298,6 +312,8 @@ async function createProject() {
         description,
         overview_body: overview,
         cover_image: coverImageURL,
+        hosting_link: demoLink.value,
+        github_link: projectGithubURL.value,
       });
     if (error) {
       submitting.value = false;

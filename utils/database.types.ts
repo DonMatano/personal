@@ -57,6 +57,8 @@ export interface Database {
           cover_image: string | null
           created_at: string | null
           description: string | null
+          github_link: string | null
+          hosting_link: string | null
           id: string
           overview_body: string | null
           title: string
@@ -65,6 +67,8 @@ export interface Database {
           cover_image?: string | null
           created_at?: string | null
           description?: string | null
+          github_link?: string | null
+          hosting_link?: string | null
           id: string
           overview_body?: string | null
           title: string
@@ -73,6 +77,8 @@ export interface Database {
           cover_image?: string | null
           created_at?: string | null
           description?: string | null
+          github_link?: string | null
+          hosting_link?: string | null
           id?: string
           overview_body?: string | null
           title?: string
@@ -90,25 +96,25 @@ export interface Database {
         Row: {
           created_at: string | null
           id: string
-          image_id: string
+          image_url: string
           project_id: string
         }
         Insert: {
           created_at?: string | null
           id: string
-          image_id: string
+          image_url: string
           project_id: string
         }
         Update: {
           created_at?: string | null
           id?: string
-          image_id?: string
+          image_url?: string
           project_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "projects_images_image_id_fkey"
-            columns: ["image_id"]
+            foreignKeyName: "projects_images_image_url_fkey"
+            columns: ["image_url"]
             referencedRelation: "images"
             referencedColumns: ["url"]
           },
