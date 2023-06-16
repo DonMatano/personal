@@ -223,8 +223,8 @@ function deleteSelectedTech(id: string) {
 }
 
 const uploadImages = async (files: File[]) => {
-  const time = new Date().getTime();
   const uploads = files.map(async (file) => {
+    const time = uuidV4();
     const {error} = await supabaseClient
       .storage
       .from('projectFiles')
@@ -244,7 +244,7 @@ const uploadImages = async (files: File[]) => {
 
 type Image = {
   url: string;
-  caption: string;
+  caption?: string;
 }
 
 const saveImagesToDB = async (images: Image[]) => {
@@ -331,10 +331,34 @@ async function createProject() {
       .from('projects_tags')
       .insert(projectTags);
 
-    if (projectTagsError) {
+    // Upload Project Images to Storage
+    let storedProjectImagesURLs: string[] = [];
+    if (projectImagesFiles.value.length > 0) {
+     storedProjectImagesURLs = await uploadImages(projectImagesFiles.value);
+    }
+
+    console.log('storedProjectImagesURLs', storedProjectImagesURLs);
+
+    // Store Project Images to DB
+    saveImagesToDB(storedProjectImagesURLs.map((url) => ({
+      url,
+    })));
+    const projectImages = storedProjectImagesURLs.map((url) => {
+      console.log('url', url, projectId);
+      return {id: uuidV4(),
+      project_id: projectId,
+      image_url: url}
+    }
+    );
+
+    const {error: projectImagesError} = await supabaseClient
+      .from('projects_images')
+      .insert(projectImages);
+
+    if (projectTagsError || projectImagesError) {
       submitting.value = false;
       buttonLabel.value = 'CREATE';
-      errorText.value = projectTagsError.message;
+      errorText.value = projectTagsError?.message || projectImagesError?.message || 'Error gotten while saving project tags and images';
     }
     buttonLabel.value = 'CREATED';
 
