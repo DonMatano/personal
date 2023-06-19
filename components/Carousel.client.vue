@@ -10,56 +10,28 @@
       </SplideSlide>
     </Splide>
   </div>
-  <div v-show="showModal" class="relative z-20" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-  <!--
-    Background backdrop, show/hide based on modal state.
-
-    Entering: "ease-out duration-300"
-      From: "opacity-0"
-      To: "opacity-100"
-    Leaving: "ease-in duration-200"
-      From: "opacity-100"
-      To: "opacity-0"
-  -->
-  <div
-    class="fixed inset-0 bg-gray-500 z-10 bg-opacity-75 transition-opacity"
-  />
-
-  <div class="fixed inset-0  z-20 overflow-y-auto">
-    <div class="flex h-screen justify-center p-4 text-center sm:items-center sm:p-0">
-      <!--
-        Modal panel, show/hide based on modal state.
-
-        Entering: "ease-out duration-300"
-          From: "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-          To: "opacity-100 translate-y-0 sm:scale-100"
-        Leaving: "ease-in duration-200"
-          From: "opacity-100 translate-y-0 sm:scale-100"
-          To: "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-      -->
-      <div
-        class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all w-full md:w-3/4">
-        <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
-          <button
-          @click.prevent="() => showModal = false"
-            type="button"
-            class="mt-4 mr-4 inline-flex items-center justify-center text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition ease-in-out duration-150"
-            aria-label="Close"
-          >Close Modal</button>
-          <Splide ref="mainCarousel" :options="mainOptions">
-            <SplideSlide v-for="(url) in props.imagesUrls" :key="url">
-              <img :src="url" :alt="url" />
-            </SplideSlide>
-          </Splide>
-        </div>
-      </div>
+  <VueFinalModal 
+    class=" bg-yellow-900 bg-opacity-90 overflow-auto flex justify-center items-center " 
+    v-model="showModal"
+    @click-outside="showModal = false"
+    click-to-close
+    hide-overlay
+  >
+    <div class="flex justify-center items-center">
+      <Splide class="my-5 w-9/12" ref="mainCarousel" :options="mainOptions">
+        <SplideSlide v-for="(url) in props.imagesUrls" :key="url">
+          <div class="flex justify-center items-center pt-4 overflow-auto">
+            <img class="" :src="url" :alt="url" />
+          </div>
+        </SplideSlide>
+      </Splide>
     </div>
-  </div>
-</div>
+  </VueFinalModal>
 </template>
 
 <script setup lang="ts">
 import {Options, Splide, SplideSlide} from '@splidejs/vue-splide';
+import {VueFinalModal, ModalsContainer} from 'vue-final-modal';
 import '@splidejs/vue-splide/css';
 
 type Props = {
