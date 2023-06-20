@@ -11,7 +11,7 @@
     </Splide>
   </div>
   <VueFinalModal 
-    class=" bg-yellow-900 bg-opacity-90 overflow-auto flex justify-center items-center " 
+    class=" bg-gray-900 bg-opacity-90 overflow-auto flex justify-center items-center " 
     v-model="showModal"
     @click-outside="showModal = false"
     click-to-close
