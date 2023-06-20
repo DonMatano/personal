@@ -19,3 +19,18 @@ export type Project = {
   githubLinkURL: string;
   demoLinkURL: string;
 };
+
+export type Work = {
+  id: string;
+  companyName: string;
+  companyLogoURL: string;
+  companyWebsiteURL: string;
+  position: string;
+  startDate: string;
+  endDate?: string;
+  isCurrentJob: boolean;
+  description: string;
+  responsibilities: string[];
+  techsUsed: string[];
+};
+

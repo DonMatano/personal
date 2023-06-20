@@ -32,6 +32,9 @@
         <li>Flutter</li>
       </ul>
     </section>
+    <section class="my-10">
+      <WorkList />
+    </section>
     <section class="mt-10 text-white">
       <div class="flex justify-between items-center">
         <h2 class="text-[2.5rem] md:text-[4.5rem] lg:text-xl font-bold my-8">Projects</h2>
@@ -129,31 +132,7 @@ if (error) {
 }
 
 const projectWithTags = ref<Project[]>(projectData?.value|| []);
-// useState('projects', () => projectData?.value || []);
-//   if (projectData.value && projectData.value.length) {
-//     projectWithTags.value = projectData.value?.map((project) => {
-//       const projectTags: Tag[] = project.tagsIds.map((tagId) => {
-//         const foundTags = allAvailableTags.value.find((tag) => tag.id === tagId);
-//         return foundTags;
-//       }).filter((tag) => tag !== undefined) as Tag[];
-//       const ans = {
-//         ...project,
-//         tags: projectTags,
-//       };
-//       const rest: Project = {
-//         id: ans.id,
-//         title: ans.title,
-//         description: ans.description || '',
-//         overviewBody: ans.overviewBody || '',
-//         coverImageURL: ans.coverImageURL || '',
-//         githubLinkURL: ans.githubLink || '',
-//         demoLinkURL: ans.demoLink || '',
-//         tags: projectTags,
-//       };
-//       return rest;
-//     });
-//   }
-  useState('projects', () => projectWithTags.value || []);
+useState('projects', () => projectWithTags.value || []);
 </script>
 
 <style lang="css">
