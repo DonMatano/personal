@@ -1,7 +1,7 @@
 <template>
   <div>
     <Head>
-      <Title>matanomwakima</Title>
+      <Title>Mwakima Matano's Portfolio</Title>
       <Meta name="description" content="Matano Mwakima's portfolio" />
       <Link rel="icon" href="/favicon.ico" />
       <Link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"/>
