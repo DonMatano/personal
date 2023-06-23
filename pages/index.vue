@@ -14,11 +14,15 @@
           </span>
         </h1>
         <p class="text-body block mt-4">
-          Based in Kenya, I'm a fullstack developer passionate about making software that changes people lives.
+          Based in Kenya, I'm an experienced fullstack developer passionate about making software that changes people lives.
         </p>
         <a href="#contactForm"
           class="uppercase block underline underline-offset-8 decoration-accent-teal mt-10 text-body font-bold tracking-[2.29px] hover:text-accent-teal">
           Contact Me
+        </a>
+        <a download href="/CV.pdf" target="_blank" alt="Download CV"
+          class="uppercase block underline underline-offset-8 decoration-accent-teal mt-10 text-body font-bold tracking-[2.29px] hover:text-accent-teal">
+          Download CV
         </a>
       </section>
     </div>
