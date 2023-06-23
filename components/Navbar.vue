@@ -3,18 +3,13 @@
     <NuxtLink to="/" class="text-m text-center font-bold">matanomwakima</NuxtLink>
     <ul class="flex justify-center my-3 gap-3 items-center">
       <li>
-        <a href="#">
+        <a href="https://github.com/DonMatano" target="_blank">
           <img src="~/assets/images/icon-github.svg" alt="github">
         </a>
       </li>
       <li>
-        <a href="#">
-          <img src="~/assets/images/icon-twitter.svg" alt="github">
-        </a>
-      </li>
-      <li>
-        <a href="#">
-          <img src="~/assets/images/icon-linkedin.svg " alt="github">
+        <a href="https://www.linkedin.com/in/matano-mwakima-9b8627107/" target="_blank">
+          <img src="~/assets/images/icon-linkedin.svg " alt="linkedIn">
         </a>
       </li>
     </ul>
