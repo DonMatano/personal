@@ -84,6 +84,7 @@ const isShowingAddTechForm = ref(false);
 const selectedTagsIds = ref<string[]>([]);
 const selectedTags = ref<Tag[]>([]);
 const isAddingTech = ref(false);
+const newTechSuccessfullyUploaded = ref(false);
 const projectCoverPageURL = ref('');
 const coverImageCaption = ref('');
 const projectImagesURLs = ref<string[]>([]);
@@ -111,9 +112,6 @@ watch(selectedTagsIds, (newVal) => {
 function bodyContentSaved(savedContent: string) {
   bodyContent.value = savedContent;
 }
-function showModal() {
-  isShowingUploadCoverPageModal.value = !isShowingUploadCoverPageModal.value;
-}
 
 function addUploadCoverImage(file: File) {
   projectCoverPageData.file = file;
@@ -129,6 +127,7 @@ function addProjectImages(files: File[]) {
 
 async function addTech(newTechName: string) {
   try {
+    newTechSuccessfullyUploaded.value = false;
   isAddingTech.value = true;
   const listOfTechsToAdd = newTechName.split(',').map((tech) => {
     tech.trim()
@@ -151,6 +150,8 @@ async function addTech(newTechName: string) {
   tags.value.push(...listOfTechsToAdd);
   isAddingTech.value = false;
   isShowingAddTechForm.value = false;
+  newTechSuccessfullyUploaded.value = true;
+
 } catch (error) {
   console.error(error);
   isAddingTech.value = false;
@@ -192,8 +193,7 @@ const uploadImages = async (files: File[]) => {
       .getPublicUrl(`files/${file.name}-${time}`);
     return publicUrl;
     })
-  const urls = await Promise.all(uploads);
-  return urls;
+  return await Promise.all(uploads);
 }
 
 type Image = {
@@ -326,6 +326,6 @@ async function createProject() {
     errorText.value = 'Something went wrong: ' + e;
     console.error(e);
   }
-};
+}
 
 </script>

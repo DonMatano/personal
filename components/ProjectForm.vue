@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {Tag} from "~/utils/types";
-import {ref} from "vue";
+import {ref, watch} from "vue";
 
 type PropsTypes = {
   projectName: string,
@@ -12,6 +12,7 @@ type PropsTypes = {
   coverImageCaption: string,
   selectedTagsIds: string[],
   isAddingTech: boolean,
+  newTechUploaded: boolean,
   addTechButtonLabel: string,
   tags: Tag[],
   isSubmitting: boolean,
@@ -41,6 +42,13 @@ const isShowingUploadCoverPageModal = ref(false);
 const isShowingUploadProjectFilesModal = ref(false);
 const isShowingAddTechForm = ref(false);
 const newTechName = ref('');
+
+watch(() => props.newTechUploaded, (newValue) => {
+  if (newValue) {
+    isShowingAddTechForm.value = false;
+    newTechName.value = '';
+  }
+})
 
 const selectedTags = computed(() => {
   return props.tags.filter((tag) => props.selectedTagsIds.includes(tag.id));
@@ -91,7 +99,7 @@ function createProject() {
            class="bg-transparent border-b border-white py-3 px-4 outline-none focus:border-accent-teal"
            @input="(e) => emit('project_github_url_updated', e.target.value)"
     />
-    <textarea row="10" maxlength="250" placeholder="Quick project description"
+    <textarea rows="10" maxlength="250" placeholder="Quick project description"
               class="bg-transparent border-b border-white py-3 px-4 outline-none focus:border-accent-teal"
               @input="(e) => emit('project_description_updated', e.target.value)"
     />
