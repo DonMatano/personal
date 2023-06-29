@@ -17,7 +17,10 @@
     click-to-close
     hide-overlay
   >
-    <div class="flex justify-center items-center">
+    <div class="flex justify-center items-center relative">
+      <div class="bg-black absolute top-10 z-50 p-2">
+        <p class="text-m font-bold text-white">Click esc to close</p>
+      </div>
       <Splide class="my-5 w-9/12" ref="mainCarousel" :options="mainOptions">
         <SplideSlide v-for="(url) in props.imagesUrls" :key="url">
           <div class="flex justify-center items-center pt-4 overflow-auto">
