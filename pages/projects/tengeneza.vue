@@ -4,100 +4,43 @@
       Create Project
     </h2>
 
-    <form class="flex flex-col gap-4">
-      <input type="text" placeholder="Project Name"
-        class="bg-transparent border-b border-white py-3 px-4 outline-none focus:border-accent-teal"
-        v-model="projectName"
-      />
-      <input type="text" placeholder="Demo Link"
-        class="bg-transparent border-b border-white py-3 px-4 outline-none focus:border-accent-teal"
-        v-model="demoLink"
-      />
-      <input type="text" placeholder="Github Link"
-        class="bg-transparent border-b border-white py-3 px-4 outline-none focus:border-accent-teal"
-        v-model="projectGithubURL"
-        />
-      <textarea row="10" maxlength="250" placeholder="Quick project description"
-        class="bg-transparent border-b border-white py-3 px-4 outline-none focus:border-accent-teal"
-        v-model="projectDescription"
-      />
-      <div class="flex flex-col">
-        <Editor  @dataSaved="bodyContentSaved" :body-content="bodyContent" can-edit />
-      </div>
-      <img
-        v-if="projectCoverPageURL"
-        :src="projectCoverPageURL"
-        class="w-full h-96 object-cover object-center"
-      />
-      <button type="button" class="justify-end px-4 py-1 border border-accent-teal" @click="showModal">
-        Upload project cover page
-      </button>
-      <ImageUploader
-        :showModal="isShowingUploadCoverPageModal"
-        @model_closed="isShowingUploadCoverPageModal = false" 
-        @upload="addUploadCoverImage"
-      />
-      <input v-if="projectCoverPageURL" type="text" placeholder="Cover Image Caption"
-        class="bg-transparent border-b border-white py-3 px-4 outline-none focus:border-accent-teal"
-        v-model="coverImageCaption"
-      />
-      <div class="flex items-center">
-        <select
-          multiple
-          v-model="selectedTagsIds"
-          class="bg-transparent text-white border border-white py-3 px-4 outline-none focus:border-accent-teal w-1/4">
-          <option value="" disabled>Select Techs Used</option>
-          <option v-for="tag in tags" :value="tag.id" class="uppercase">{{tag.name}}</option>
-        </select>
-
-        <button v-if="!isShowingAddTechForm" type="button"
-          class="border-b border-accent-teal py-2 ml-6 leading-[1.625rem] tracking-[0.14em] font-bold hover:text-accent-teal"
-          @click="isShowingAddTechForm = true">
-          ADD TECH
-        </button>
-        <form v-else class="ml-6 flex items-center gap-4"> 
-          <input v-model.trim="newTechName" type="text" placeholder="Tech Name"
-            class="bg-transparent border-b border-white py-3 px-4 outline-none focus:border-accent-teal" />
-          <button type="button"
-            class="self-end border-b border-accent-teal py-2  leading-[1.625rem] tracking-[0.14em] font-bold hover:text-accent-teal"
-            :disabled="isAddingTech"
-            @click="addTech">
-            {{ isAddingTech ? 'ADDING' : 'ADD' }}
-          </button>
-        </form>
-      </div>
-      <div class="flex flex-wrap gap-2">
-        <TechItem v-for="tag in selectedTags" :key="tag.id" :tech="tag" @delete="deleteSelectedTech"/>
-      </div>
-      <div class="flex flex-wrap">
-        <img v-for="fileURL in projectImagesURLs" :src="fileURL">
-      </div>
-      <button type="button" class="justify-end px-4 py-1 border border-accent-teal" @click="isShowingUploadProjectFilesModal = true">
-        Upload project files
-      </button>
-      <ImageUploader
-        multiple
-        :showModal="isShowingUploadProjectFilesModal"
-        @model_closed="isShowingUploadProjectFilesModal = false"
-        @upload="addProjectImages"
-      />
-      <button type="button"
-        :disabled="submitting"
-        class="self-end border-b border-accent-teal py-2  leading-[1.625rem] tracking-[0.14em] font-bold hover:text-accent-teal"
-        @click="createProject"
-      >
-        {{ buttonLabel }}
-      </button>
-      <p v-if="errorText" class=" text-red-400">Error: {{ errorText }}</p>
-    </form>
+    <ProjectForm
+      @submit_button_clicked="createProject"
+      @project_name_updated="projectName = $event"
+      @demo_link_updated="demoLink = $event"
+      @project_github_url_updated="projectGithubURL = $event"
+      @project_description_updated="projectDescription = $event"
+      @cover_image_caption_updated="coverImageCaption = $event"
+      @selected_tags_ids_updated="selectedTagsIds = $event"
+      @body_content_updated="bodyContentSaved"
+      @project_cover_image_updated="addUploadCoverImage"
+      @project_images_updated="addProjectImages"
+      @add_tech="addTech"
+      @delete_selected_tech="deleteSelectedTech"
+      :projectName="projectName"
+      :demoLink="demoLink"
+      :projectGithubURL="projectGithubURL"
+      :projectDescription="projectDescription"
+      :coverImageCaption="coverImageCaption"
+      :selectedTagsIds="selectedTagsIds"
+      :projectImagesURLs="projectImagesURLs"
+      :bodyContent="bodyContent"
+      :projectCoverPageURL="projectCoverPageURL"
+      :tags="tags"
+      :isAddingTech="isAddingTech"
+      :addTechButtonLabel="techButtonLabel"
+      :createButtonLabel="buttonLabel"
+      :errorText="errorText"
+      :isSubmitting="submitting"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import {ref, watch} from 'vue';
 import {Tag} from '@/utils/types';
 import {v4 as uuidV4} from 'uuid';
-import { Database } from '~/utils/database.types';
+import {Database} from '~/utils/database.types';
 
 definePageMeta({
   title: 'Tengeneza',
@@ -114,11 +57,10 @@ const getTags = async () => {
   if (error) {
     throw error;
   }
-  const tags = data?.map((tag) => ({
+  return data?.map((tag) => ({
     id: tag.id,
     name: tag.text,
   })) || [];
-  return tags;
 };
 
 const {data, error } = await useAsyncData('tags', async () => {
@@ -139,7 +81,6 @@ const isShowingUploadProjectFilesModal = ref(false);
 const isShowingAddTechForm = ref(false);
 const selectedTagsIds = ref<string[]>([]);
 const selectedTags = ref<Tag[]>([]);
-const newTechName = ref('');
 const isAddingTech = ref(false);
 const projectCoverPageURL = ref('');
 const coverImageCaption = ref('');
@@ -151,6 +92,7 @@ const projectGithubURL = ref('');
 const projectDescription = ref('');
 const submitting = ref(false);
 const buttonLabel = ref('CREATE');
+const techButtonLabel = ref('ADD TECH');
 const errorText = ref('');
 interface ProjectFileData {
   file: File | undefined;
@@ -183,15 +125,10 @@ function addProjectImages(files: File[]) {
   isShowingUploadProjectFilesModal.value = false;
 }
 
-async function addTech() {
+async function addTech(newTechName: string) {
   try {
-  if (!newTechName.value) {
-    newTechName.value = '';
-    isShowingAddTechForm.value = false;
-    return
-  };
   isAddingTech.value = true;
-  const listOfTechsToAdd = newTechName.value.split(',').map((tech) => {
+  const listOfTechsToAdd = newTechName.split(',').map((tech) => {
     tech.trim()
     return {
       id: uuidV4(),
@@ -210,7 +147,6 @@ async function addTech() {
     return;
   }
   tags.value.push(...listOfTechsToAdd);
-  newTechName.value = '';
   isShowingAddTechForm.value = false;
 } catch (error) {
   console.error(error);
