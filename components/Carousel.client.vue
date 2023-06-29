@@ -34,7 +34,7 @@
 
 <script setup lang="ts">
 import {Options, Splide, SplideSlide} from '@splidejs/vue-splide';
-import {VueFinalModal, ModalsContainer} from 'vue-final-modal';
+import {VueFinalModal} from 'vue-final-modal';
 import '@splidejs/vue-splide/css';
 
 type Props = {
