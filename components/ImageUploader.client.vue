@@ -23,7 +23,15 @@ const emit = defineEmits<{
 (e: 'upload', data: any): void
 }>()
 
-const uppy = new Uppy().use(ImageEditor, {quality: 0.8, cropperOptions: {aspectRatio: 27/20}});
+const uppy = new Uppy({
+  meta: { type: 'avatar' },
+  restrictions: {
+    maxNumberOfFiles: props.multiple ? 10 : 1,
+    allowedFileTypes: ['image/*'],
+  },
+
+  autoProceed: true,
+}).use(ImageEditor, {quality: 0.8, cropperOptions: {aspectRatio: 27/20}});
 uppy.on('dashboard:modal-closed', () => {
   emit('model_closed')
 });

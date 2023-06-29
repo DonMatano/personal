@@ -14,9 +14,11 @@
       @selected_tags_ids_updated="selectedTagsIds = $event"
       @body_content_updated="bodyContentSaved"
       @project_cover_image_updated="addUploadCoverImage"
+      @project_cover_image_deleted="deleteCoverImage"
       @project_images_updated="addProjectImages"
       @add_tech="addTech"
       @delete_selected_tech="deleteSelectedTech"
+      @project_image_deleted="deleteProjectImage"
       :projectName="projectName"
       :demoLink="demoLink"
       :projectGithubURL="projectGithubURL"
@@ -147,11 +149,27 @@ async function addTech(newTechName: string) {
     return;
   }
   tags.value.push(...listOfTechsToAdd);
+  isAddingTech.value = false;
   isShowingAddTechForm.value = false;
 } catch (error) {
   console.error(error);
   isAddingTech.value = false;
 }
+}
+
+function deleteCoverImage() {
+  projectCoverPageData.file = undefined;
+  projectCoverPageURL.value = '';
+}
+
+function deleteProjectImage(url: string) {
+  const index = projectImagesURLs.value.findIndex((imageURL) => imageURL === url);
+  if (index === -1) {
+    console.error('Image not found');
+    return;
+  }
+  projectImagesFiles.value.splice(index, 1);
+  projectImagesURLs.value.splice(index, 1);
 }
 
 function deleteSelectedTech(id: string) {
@@ -255,7 +273,7 @@ async function createProject() {
       submitting.value = false;
       buttonLabel.value = 'CREATE';
       errorText.value = error.message;
-    };
+    }
 
     // Store Project Tags to DB
     const projectTags = selectedTagsIds.value.map((tagId) => ({
@@ -276,7 +294,7 @@ async function createProject() {
     console.log('storedProjectImagesURLs', storedProjectImagesURLs);
 
     // Store Project Images to DB
-    saveImagesToDB(storedProjectImagesURLs.map((url) => ({
+    await saveImagesToDB(storedProjectImagesURLs.map((url) => ({
       url,
     })));
     const projectImages = storedProjectImagesURLs.map((url) => {

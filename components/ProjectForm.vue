@@ -26,10 +26,12 @@ const emit = defineEmits<{
   (e: 'project_github_url_updated', projectGithubURL: string): void
   (e: 'project_description_updated', projectDescription: string): void
   (e: 'body_content_updated', bodyContent: string): void
-  (e: 'project_cover_image_updated', projectCoverPageURL: File): void
+  (e: 'project_cover_image_updated', projectCoverPageImage: File): void
+  (e: 'project_cover_image_deleted'): void
   (e: 'cover_image_caption_updated', coverImageCaption: string): void
   (e: 'selected_tags_ids_updated', selectedTagsIds: string[]): void
   (e: 'project_images_updated', projectImages: File[]): void
+  (e: 'project_image_deleted', imageURL: string): void
   (e: 'add_tech', newTechName: string): void
   (e: 'submit_button_clicked'): void
   (e: 'delete_selected_tech', techId: string): void
@@ -96,10 +98,12 @@ function createProject() {
     <div class="flex flex-col">
       <Editor  @dataSaved="bodyContentSaved" :body-content="bodyContent" can-edit />
     </div>
-    <img
+    <ImagePreview
         v-if="projectCoverPageURL"
-        :src="projectCoverPageURL"
-        class="w-full h-96 object-cover object-center"
+        :imageURL="projectCoverPageURL"
+        imageCaption="Cover"
+        @delete_image="emit('project_cover_image_deleted')"
+        custom-height="h-[600px]"
     />
     <button
         type="button"
@@ -146,7 +150,13 @@ function createProject() {
       <TechItem v-for="tag in selectedTags" :key="tag.id" :tech="tag" @delete="id => emit('delete_selected_tech', id)"/>
     </div>
     <div class="flex flex-wrap">
-      <img v-for="fileURL in projectImagesURLs" :src="fileURL">
+      <ImagePreview v-for="fileURL in projectImagesURLs"
+                    :key="fileURL"
+                    :imageURL="fileURL"
+                    @delete_image="emit('project_image_deleted', fileURL)"
+                    custom-height="h-[200px]"
+                    class="mx-0 justify-start"
+      />
     </div>
     <button type="button" class="justify-end px-4 py-1 border border-accent-teal" @click="isShowingUploadProjectFilesModal = true">
       Upload project files
