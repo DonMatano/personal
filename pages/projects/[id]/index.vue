@@ -22,7 +22,7 @@
         </a>
         <NuxtLink
           v-if="isSignedIn"
-          to="#"
+          :to="`/projects/${state.selectedProject.id}/rekebisha`"
           class="uppercase block underline underline-offset-8 decoration-accent-teal mt-10 text-body font-bold tracking-[2.29px] hover:text-accent-teal">
           Edit Project
         </NuxtLink>
@@ -152,4 +152,13 @@ onMounted(async () => {
   }
   state.selectedProject = project;
 });
+
+function navigateToEditProject() {
+  return {
+    path: '/projects/:id/rekebisha',
+    params: {
+      id: state.selectedProject.id,
+    },
+  };
+}
 </script>

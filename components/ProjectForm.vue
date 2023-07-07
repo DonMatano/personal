@@ -92,18 +92,22 @@ function createProject() {
     <input type="text" placeholder="Project Name"
            class="bg-transparent border-b border-white py-3 px-4 outline-none focus:border-accent-teal"
            @input="(e) => emit('project_name_updated', e.target.value)"
+           :value="projectName"
     />
     <input type="text" placeholder="Demo Link"
            class="bg-transparent border-b border-white py-3 px-4 outline-none focus:border-accent-teal"
            @input="(e) => emit('demo_link_updated', e.target.value)"
+           :value="demoLink"
     />
     <input type="text" placeholder="Github Link"
            class="bg-transparent border-b border-white py-3 px-4 outline-none focus:border-accent-teal"
            @input="(e) => emit('project_github_url_updated', e.target.value)"
+            :value="projectGithubURL"
     />
-    <textarea rows="10" maxlength="250" placeholder="Quick project description"
+    <textarea rows="4" maxlength="250" placeholder="Quick project description"
               class="bg-transparent border-b border-white py-3 px-4 outline-none focus:border-accent-teal"
               @input="(e) => emit('project_description_updated', e.target.value)"
+              :value="projectDescription"
     />
     <div class="flex flex-col">
       <Editor  @dataSaved="bodyContentSaved" :body-content="bodyContent" can-edit />

@@ -22,14 +22,53 @@ const props = defineProps({
 let editorRef: EditorJS.default;
 interface EditorData {
   outputData: EditorJS.OutputData | undefined,
-};
+}
 const editorData: EditorData = reactive({
   outputData: undefined,
 });
 const htmlOutput = ref('');
 const stringifiedEditorData = ref('');
 const showEdit = ref(false);
-onMounted(() => {
+watch(() => props.bodyContent, () => {
+    deStringifyBodyContent();
+})
+watch(() => editorData.outputData, () => {
+  if (editorData.outputData) {
+    parseDataToHtml(editorData.outputData);
+  }
+})
+onMounted(async () => {
+  const editor = new EditorJS({
+    holder: 'editorjs',
+    placeholder: 'Add Details',
+    autofocus: true,
+    tools: {
+      header: {
+        class: Header,
+        inlineToolbar: true,
+      },
+      list: {
+        class: List,
+        inlineToolbar: true,
+        config: {
+          defaultStyle: 'unordered'
+        }
+      },
+    },
+    data: editorData?.outputData,
+    // readOnly: true,
+    onReady: () => {
+      editorRef = editor
+    },
+  });
+  if (editorData.outputData) {
+    await parseDataToHtml(editorData.outputData);
+    stringifyBodyContent();
+  }
+})
+
+const _refreshEditor = () => {
+  editorRef.destroy();
   const editor = new EditorJS({
     holder: 'editorjs',
     placeholder: 'Add Details',
@@ -55,8 +94,9 @@ onMounted(() => {
   });
   if (editorData.outputData) {
     parseDataToHtml(editorData.outputData);
+    stringifyBodyContent();
   }
-})
+}
 
 
 onBeforeUnmount(() => {
@@ -71,8 +111,11 @@ const stringifyBodyContent = () => {
 
 const deStringifyBodyContent = () => {
   try {
+    console.log('props.bodyContent', props.bodyContent)
     const res = JSON.parse(props.bodyContent) as EditorJS.OutputData;
+    console.log('parsed bodyContent', res)
     editorData.outputData = res;
+    _refreshEditor();
   } catch (e) {
     console.error('Error parsing bodyContent', e);
   }
@@ -128,6 +171,9 @@ async function contentSaved() {
 }
 
 function toggleShowEdit() {
+  if (!showEdit.value) {
+    _refreshEditor();
+  }
   showEdit.value = !showEdit.value;
 }
 </script>
