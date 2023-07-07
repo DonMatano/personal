@@ -19,6 +19,7 @@ type PropsTypes = {
   createButtonLabel: string,
   projectImagesURLs: string[],
   errorText: string,
+  isPublished: boolean,
 }
 const props = defineProps<PropsTypes>()
 const emit = defineEmits<{
@@ -36,6 +37,7 @@ const emit = defineEmits<{
   (e: 'add_tech', newTechName: string): void
   (e: 'submit_button_clicked'): void
   (e: 'delete_selected_tech', techId: string): void
+  (e: 'publish_updated', isPublished: boolean): void
 }>()
 
 const isShowingUploadCoverPageModal = ref(false);
@@ -175,6 +177,10 @@ function createProject() {
         @model_closed="isShowingUploadProjectFilesModal = false"
         @upload="addProjectImages"
     />
+    <label for="publish">
+     Publish
+      <input type="checkbox" id="publish" class="ml-2" @change="(e) => emit('publish_updated', e.target.checked)" />
+    </label>
     <button type="button"
             :disabled="isSubmitting"
             class="self-end border-b border-accent-teal py-2  leading-[1.625rem] tracking-[0.14em] font-bold hover:text-accent-teal"

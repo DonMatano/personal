@@ -51,6 +51,7 @@
 <script setup lang="ts">
 import { Database } from '~/utils/database.types';
 import { Project, Tag, Image } from '~/utils/types';
+import {reactive} from 'vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -110,6 +111,7 @@ const getProject = async () : Promise<Project> => {
     coverImageURL: data.cover_image || '',
     tags,
     images,
+    isPublished: data.is_published,
     githubLinkURL: data.github_link || '',
     demoLinkURL: data.hosting_link || '',
     overviewBody: data.overview_body || '',
@@ -131,6 +133,7 @@ const state = reactive<State>(
     overviewBody: '',
     githubLinkURL: '',
     demoLinkURL: '',
+    isPublished: false,
 }});
 
 onMounted(async () => {

@@ -47,7 +47,7 @@
           class="uppercase underline mr-3 underline-offset-8 decoration-accent-teal mt-10 text-body font-bold tracking-[2.29px]">
           Create new project
         </NuxtLink>
-        <NuxtLink to="/projects"
+        <NuxtLink v-if="projectWithTags.length > 5" to="/projects"
           class="uppercase underline underline-offset-8 decoration-accent-teal mt-10 text-body font-bold tracking-[2.29px]">
           View more projects
         </NuxtLink>
@@ -61,13 +61,14 @@
 <script setup lang="ts">
 import { Database } from '~/utils/database.types';
 import { Project, Tag, Image } from '~/utils/types';
+import {ref} from 'vue';
 
 const user = useSupabaseUser();
 const supabaseClient = useSupabaseClient<Database>();
 const isSignedIn = !!user.value;
 
 const {data: projectData, error} = await useAsyncData('projects', async () => {
-  const {data, error} = await supabaseClient
+  const {data, error} = isSignedIn ? await supabaseClient
     .from('projects')
     .select(`
       id,
@@ -78,7 +79,19 @@ const {data: projectData, error} = await useAsyncData('projects', async () => {
       github_link,
       hosting_link,
       cover_image`
-    );
+    ): await supabaseClient
+      .from('projects')
+      .select(`
+      id,
+      title,
+      description,
+      created_at,
+      overview_body,
+      github_link,
+      hosting_link,
+      cover_image`
+      ).eq('is_published', true)
+  ;
   if (error) {
     throw error;
   }

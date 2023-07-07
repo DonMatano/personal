@@ -13,7 +13,7 @@
         </p>
       </div>
       <h3 class="text-[1.6rem]">{{ work.position }}</h3>
-      <p>
+      <div>
         <span class="font-bold">Responsibilities:</span>
         <ul>
           <li v-for="responsibility in work.responsibilities"
@@ -23,7 +23,7 @@
             {{ responsibility }}
           </li>
         </ul>
-      </p>
+      </div>
       <h3 class="text-[1.6rem]">Technologies used:</h3>
       <ul class="flex flex-wrap gap-3">
         <li

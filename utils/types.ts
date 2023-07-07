@@ -18,6 +18,7 @@ export type Project = {
   overviewBody: string;
   githubLinkURL: string;
   demoLinkURL: string;
+  isPublished: boolean;
 };
 
 export type Work = {

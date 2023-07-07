@@ -19,6 +19,7 @@
       @add_tech="addTech"
       @delete_selected_tech="deleteSelectedTech"
       @project_image_deleted="deleteProjectImage"
+      @publish_updated="isPublished = $event"
       :projectName="projectName"
       :demoLink="demoLink"
       :projectGithubURL="projectGithubURL"
@@ -34,6 +35,7 @@
       :createButtonLabel="buttonLabel"
       :errorText="errorText"
       :isSubmitting="submitting"
+      :isPublished="isPublished"
     />
   </div>
 </template>
@@ -97,6 +99,7 @@ const submitting = ref(false);
 const buttonLabel = ref('CREATE');
 const techButtonLabel = ref('ADD TECH');
 const errorText = ref('');
+const isPublished = ref(false);
 interface ProjectFileData {
   file: File | undefined;
 }
@@ -266,6 +269,7 @@ async function createProject() {
         description,
         overview_body: overview,
         cover_image: coverImageURL,
+        is_published: isPublished.value,
         hosting_link: demoLink.value,
         github_link: projectGithubURL.value,
       });
