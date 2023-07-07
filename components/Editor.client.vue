@@ -67,37 +67,6 @@ onMounted(async () => {
   }
 })
 
-const _refreshEditor = () => {
-  editorRef.destroy();
-  const editor = new EditorJS({
-    holder: 'editorjs',
-    placeholder: 'Add Details',
-    autofocus: true,
-    tools: {
-      header: {
-        class: Header,
-        inlineToolbar: true,
-      },
-      list: {
-        class: List,
-        inlineToolbar: true,
-        config: {
-          defaultStyle: 'unordered'
-        }
-      },
-    },
-    data: editorData?.outputData,
-    // readOnly: true,
-    onReady: () => {
-      editorRef = editor
-    },
-  });
-  if (editorData.outputData) {
-    parseDataToHtml(editorData.outputData);
-    stringifyBodyContent();
-  }
-}
-
 
 onBeforeUnmount(() => {
   editorRef.destroy();
@@ -115,7 +84,7 @@ const deStringifyBodyContent = () => {
     const res = JSON.parse(props.bodyContent) as EditorJS.OutputData;
     console.log('parsed bodyContent', res)
     editorData.outputData = res;
-    _refreshEditor();
+    editorRef.render(res);
   } catch (e) {
     console.error('Error parsing bodyContent', e);
   }
@@ -172,7 +141,11 @@ async function contentSaved() {
 
 function toggleShowEdit() {
   if (!showEdit.value) {
-    _refreshEditor();
+    if (editorData.outputData)
+    {
+
+      editorRef.render(editorData.outputData)
+    }
   }
   showEdit.value = !showEdit.value;
 }
