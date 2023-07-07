@@ -27,6 +27,12 @@
           Edit Project
         </NuxtLink>
     </div>
+    <img
+      v-if="state.selectedProject.coverImageURL"
+      :src="state.selectedProject.coverImageURL"
+      alt="Project cover image"
+      class="w-full min-h-[25rem] object-cover object-center my-5"
+    />
     <p class="text-body mt-4">{{ state.selectedProject.description }}</p>
 
     <Editor class="my-5" :body-content="state.selectedProject.overviewBody"/>
