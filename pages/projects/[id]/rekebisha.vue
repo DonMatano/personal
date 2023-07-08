@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import {reactive, ref, watch} from 'vue';
-import {Image, Project, Tag} from '@/utils/types';
-import {v4 as uuidV4} from 'uuid';
-import {Database} from '~/utils/database.types';
+import { reactive, ref } from 'vue';
+import { v4 as uuidV4 } from 'uuid';
+import { Image, Project, Tag } from '@/utils/types';
+import { Database } from '~/utils/database.types';
 
 definePageMeta({
   title: 'Edit Project',
   description: 'Edit your project',
-  middleware: 'auth'
+  middleware: 'auth',
 });
 
 const route = useRoute();
@@ -16,51 +16,55 @@ const { id } = route.params;
 
 const supabaseClient = useSupabaseClient<Database>();
 const projects = useState<Project[]>('projects');
-const getProject = async () : Promise<Project> => {
-  const {data, error} = await supabaseClient
-      .from('projects')
-      .select('*')
-      .eq('id', id)
-      .single();
+const getProject = async (): Promise<Project> => {
+  const { data, error } = await supabaseClient
+    .from('projects')
+    .select('*')
+    .eq('id', id)
+    .single();
   if (error || !data) {
     throw error || new Error('Project not found');
   }
-  const {data: projectTags, error: projectTagsError} = await supabaseClient
-      .from('projects_tags')
-      .select('tags(id, text)')
-      .eq('project_id', id);
-  console.log({projectTags, projectTagsError});
+  const { data: projectTags, error: projectTagsError } = await supabaseClient
+    .from('projects_tags')
+    .select('tags(id, text)')
+    .eq('project_id', id);
   if (projectTagsError) {
     throw projectTagsError;
   }
-  const tags = projectTags.map(({tags}) => {
-    if (tags) {
-      return {
-        id: tags.id,
-        name: tags.text,
-      };
-    }
-  }).filter(tag => tag !== undefined) as Tag[];
-  const {data: projectImages, error: imagesError} = await supabaseClient
-      .from('projects_images')
-      .select('images(url, caption)')
-      .eq('project_id', id);
+  const tags = projectTags
+    .map(({ tags }) => {
+      if (tags) {
+        return {
+          id: tags.id,
+          name: tags.text,
+        };
+      }
+      return undefined;
+    })
+    .filter((tag) => tag !== undefined) as Tag[];
+  const { data: projectImages, error: imagesError } = await supabaseClient
+    .from('projects_images')
+    .select('images(url, caption)')
+    .eq('project_id', id);
 
-  console.log({projectImages, imagesError});
   if (imagesError) {
     throw imagesError;
   }
 
-  const images = projectImages?.map(({images}) => {
-    if (images) {
-      return {
-        url: images.url,
-        caption: images.caption || '',
-      };
-    }
-  }).filter(image => image !== undefined) as Image[];
+  const images = projectImages
+    ?.map(({ images }) => {
+      if (images) {
+        return {
+          url: images.url,
+          caption: images.caption || '',
+        };
+      }
+      return undefined;
+    })
+    .filter((image) => image !== undefined) as Image[];
 
-  return  {
+  return {
     id: data.id,
     title: data.title,
     description: data.description || '',
@@ -74,55 +78,60 @@ const getProject = async () : Promise<Project> => {
   };
 };
 const getTags = async () => {
-  const {data, error} = await supabaseClient
-      .from('tags')
-      .select('id, text');
+  const { data, error } = await supabaseClient.from('tags').select('id, text');
   if (error) {
     throw error;
   }
-  return data?.map((tag) => ({
-    id: tag.id,
-    name: tag.text,
-  })) || [];
+  return (
+    data?.map((tag) => ({
+      id: tag.id,
+      name: tag.text,
+    })) || []
+  );
 };
 
-const {data, error } = await useAsyncData('tags', async () => {
+const { data, error } = await useAsyncData('tags', () => {
   return getTags();
 });
 
 if (error.value) {
+  // eslint-disable-next-line no-console
   console.error(error.value);
 }
 const tags = ref<Tag[]>(data.value || []);
 type State = {
   selectedProject: Project;
-}
-const state = reactive<State>(
-    {
-      selectedProject: {
-        id: '',
-        title: '',
-        description: '',
-        coverImageURL: '',
-        tags: [],
-        images: [],
-        overviewBody: '',
-        githubLinkURL: '',
-        demoLinkURL: '',
-        isPublished: false,
-      }});
+};
+const state = reactive<State>({
+  selectedProject: {
+    id: '',
+    title: '',
+    description: '',
+    coverImageURL: '',
+    tags: [],
+    images: [],
+    overviewBody: '',
+    githubLinkURL: '',
+    demoLinkURL: '',
+    isPublished: false,
+  },
+});
 const bodyContent = ref(state.selectedProject.overviewBody);
 
 const isShowingUploadCoverPageModal = ref(false);
 const isShowingUploadProjectFilesModal = ref(false);
 const isShowingAddTechForm = ref(false);
-const selectedTagsIds = ref<string[]>(state.selectedProject.tags.map(tag => tag.id));
+const selectedTagsIds = ref<string[]>(
+  state.selectedProject.tags.map((tag) => tag.id),
+);
 const selectedTags = ref<Tag[]>(state.selectedProject.tags);
 const isAddingTech = ref(false);
 const newTechSuccessfullyUploaded = ref(false);
 const projectCoverPageURL = ref(state.selectedProject.coverImageURL);
 const coverImageCaption = ref('');
-const projectImagesURLs = ref<string[]>(state.selectedProject.images.map(image => image.url));
+const projectImagesURLs = ref<string[]>(
+  state.selectedProject.images.map((image) => image.url),
+);
 const projectImagesFiles = ref<File[]>([]);
 const projectName = ref(state.selectedProject.title);
 const demoLink = ref(state.selectedProject.demoLinkURL);
@@ -147,18 +156,19 @@ onMounted(async () => {
 
 const _updateProjectDetails = () => {
   bodyContent.value = state.selectedProject.overviewBody;
-  selectedTagsIds.value = state.selectedProject.tags.map(tag => tag.id);
+  selectedTagsIds.value = state.selectedProject.tags.map((tag) => tag.id);
   selectedTags.value = state.selectedProject.tags;
   projectCoverPageURL.value = state.selectedProject.coverImageURL;
   coverImageCaption.value = '';
-  projectImagesURLs.value = state.selectedProject.images.map(image => image.url);
+  projectImagesURLs.value = state.selectedProject.images.map(
+    (image) => image.url,
+  );
   projectImagesFiles.value = [];
   projectName.value = state.selectedProject.title;
   demoLink.value = state.selectedProject.demoLinkURL;
   projectGithubURL.value = state.selectedProject.githubLinkURL;
   projectDescription.value = state.selectedProject.description;
 };
-
 
 interface ProjectFileData {
   file: File | undefined;
@@ -184,18 +194,18 @@ async function addTech(newTechName: string) {
     newTechSuccessfullyUploaded.value = false;
     isAddingTech.value = true;
     const listOfTechsToAdd = newTechName.split(',').map((tech) => {
-      tech.trim()
+      tech.trim();
       return {
         id: uuidV4(),
         name: tech.toLowerCase(),
       };
     });
-    const {error} = await supabaseClient
-        .from('tags')
-        .insert(listOfTechsToAdd.map((tech) => ({
-          id: tech.id,
-          text: tech.name,
-        })));
+    const { error } = await supabaseClient.from('tags').insert(
+      listOfTechsToAdd.map((tech) => ({
+        id: tech.id,
+        text: tech.name,
+      })),
+    );
     if (error) {
       console.error(error);
       isAddingTech.value = false;
@@ -205,7 +215,6 @@ async function addTech(newTechName: string) {
     isAddingTech.value = false;
     isShowingAddTechForm.value = false;
     newTechSuccessfullyUploaded.value = true;
-
   } catch (error) {
     console.error(error);
     isAddingTech.value = false;
@@ -216,7 +225,9 @@ function deleteCoverImage() {
   projectCoverPageURL.value = '';
 }
 function deleteProjectImage(url: string) {
-  const index = projectImagesURLs.value.findIndex((imageURL) => imageURL === url);
+  const index = projectImagesURLs.value.findIndex(
+    (imageURL) => imageURL === url,
+  );
   if (index === -1) {
     console.error('Image not found');
     return;
@@ -230,69 +241,64 @@ function deleteSelectedTech(id: string) {
 const uploadImages = async (files: File[]) => {
   const uploads = files.map(async (file) => {
     const time = uuidV4();
-    const {error} = await supabaseClient
-        .storage
-        .from('projectFiles')
-        .upload(`files/${file.name}-${time}`, file);
+    const { error } = await supabaseClient.storage
+      .from('projectFiles')
+      .upload(`files/${file.name}-${time}`, file);
     if (error) {
       throw error;
     }
-    const {data: {publicUrl}} = supabaseClient
-        .storage
-        .from('projectFiles')
-        .getPublicUrl(`files/${file.name}-${time}`);
+    const {
+      data: { publicUrl },
+    } = supabaseClient.storage
+      .from('projectFiles')
+      .getPublicUrl(`files/${file.name}-${time}`);
     return publicUrl;
-  })
+  });
   return await Promise.all(uploads);
-}
+};
 function editProject() {
   console.log('edit project');
 }
 </script>
 
 <template>
-<div class="text-body">
-  <h2 class="text-[2.5rem] md:text-[4.5rem] lg:text-xl font-bold my-8">
-    Edit Project
-  </h2>
+  <div class="text-body">
+    <h2 class="text-[2.5rem] md:text-[4.5rem] lg:text-xl font-bold my-8">
+      Edit Project
+    </h2>
 
-  <ProjectForm
+    <ProjectForm
       @submit_button_clicked="editProject"
       @project_name_updated="projectName = $event"
       @demo_link_updated="demoLink = $event"
       @project_github_url_updated="projectGithubURL = $event"
-      @project_description_updated="projectDescription = $event"
-      @cover_image_caption_updated="coverImageCaption = $event"
-      @selected_tags_ids_updated="selectedTagsIds = $event"
-      @body_content_updated="bodyContentSaved"
-      @project_cover_image_updated="addUploadCoverImage"
-      @project_cover_image_deleted="deleteCoverImage"
-      @project_images_updated="addProjectImages"
-      @add_tech="addTech"
-      @delete_selected_tech="deleteSelectedTech"
-      @project_image_deleted="deleteProjectImage"
-      @publish_updated="isPublished = $event"
       :projectName="projectName"
-      :demoLink="demoLink"
-      :projectGithubURL="projectGithubURL"
-      :projectDescription="projectDescription"
-      :coverImageCaption="coverImageCaption"
-      :selectedTagsIds="selectedTagsIds"
-      :projectImagesURLs="projectImagesURLs"
-      :bodyContent="bodyContent"
-      :projectCoverPageURL="projectCoverPageURL"
+      @project_description_updated="projectDescription = $event"
+      :demo-link="demoLink"
+      @cover_image_caption_updated="coverImageCaption = $event"
+      :project-github-u-r-l="projectGithubURL"
+      @selected_tags_ids_updated="selectedTagsIds = $event"
+      :project-description="projectDescription"
+      @body_content_updated="bodyContentSaved"
+      :cover-image-caption="coverImageCaption"
+      @project_cover_image_updated="addUploadCoverImage"
+      :selected-tags-ids="selectedTagsIds"
+      @project_cover_image_deleted="deleteCoverImage"
+      :project-images-u-r-ls="projectImagesURLs"
+      @project_images_updated="addProjectImages"
+      :body-content="bodyContent"
+      @add_tech="addTech"
+      :project-cover-page-u-r-l="projectCoverPageURL"
+      @delete_selected_tech="deleteSelectedTech"
       :tags="tags"
-      :isAddingTech="isAddingTech"
-      :addTechButtonLabel="techButtonLabel"
-      :createButtonLabel="buttonLabel"
-      :errorText="errorText"
-      :isSubmitting="submitting"
-      :isPublished="isPublished"
-  />
-
-</div>
+      @project_image_deleted="deleteProjectImage"
+      :is-adding-tech="isAddingTech"
+      @publish_updated="isPublished = $event"
+      :add-tech-button-label="techButtonLabel"
+      :create-button-label="buttonLabel"
+      :error-text="errorText"
+      :is-submitting="submitting"
+      :is-published="isPublished"
+    />
+  </div>
 </template>
-
-<style scoped lang="css">
-
-</style>
