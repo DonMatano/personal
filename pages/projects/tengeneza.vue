@@ -11,63 +11,63 @@
       @project_github_url_updated="projectGithubURL = $event"
       @project_description_updated="projectDescription = $event"
       @cover_image_caption_updated="coverImageCaption = $event"
+      :project-name="projectName"
       @selected_tags_ids_updated="selectedTagsIds = $event"
+      :demo-link="demoLink"
       @body_content_updated="bodyContentSaved"
+      :project-github-u-r-l="projectGithubURL"
       @project_cover_image_updated="addUploadCoverImage"
+      :project-description="projectDescription"
       @project_cover_image_deleted="deleteCoverImage"
+      :cover-image-caption="coverImageCaption"
       @project_images_updated="addProjectImages"
+      :selected-tags-ids="selectedTagsIds"
       @add_tech="addTech"
+      :project-images-u-r-ls="projectImagesURLs"
       @delete_selected_tech="deleteSelectedTech"
+      :body-content="bodyContent"
       @project_image_deleted="deleteProjectImage"
+      :project-cover-page-u-r-l="projectCoverPageURL"
       @publish_updated="isPublished = $event"
-      :projectName="projectName"
-      :demoLink="demoLink"
-      :projectGithubURL="projectGithubURL"
-      :projectDescription="projectDescription"
-      :coverImageCaption="coverImageCaption"
-      :selectedTagsIds="selectedTagsIds"
-      :projectImagesURLs="projectImagesURLs"
-      :bodyContent="bodyContent"
-      :projectCoverPageURL="projectCoverPageURL"
       :tags="tags"
-      :isAddingTech="isAddingTech"
-      :addTechButtonLabel="techButtonLabel"
-      :createButtonLabel="buttonLabel"
-      :errorText="errorText"
-      :isSubmitting="submitting"
-      :isPublished="isPublished"
+      :is-adding-tech="isAddingTech"
+      :add-tech-button-label="techButtonLabel"
+      :create-button-label="buttonLabel"
+      :error-text="errorText"
+      :is-submitting="submitting"
+      :is-published="isPublished"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import {ref, watch} from 'vue';
-import {Tag} from '@/utils/types';
-import {v4 as uuidV4} from 'uuid';
-import {Database} from '~/utils/database.types';
+import { ref, watch } from 'vue';
+import { v4 as uuidV4 } from 'uuid';
+import { Tag } from '@/utils/types';
+import { Database } from '~/utils/database.types';
 
 definePageMeta({
   title: 'Tengeneza',
   description: 'Create a new project',
-  middleware: 'auth'
+  middleware: 'auth',
 });
 
 const supabaseClient = useSupabaseClient<Database>();
 
 const getTags = async () => {
-  const {data, error} = await supabaseClient
-  .from('tags')
-  .select('id, text');
+  const { data, error } = await supabaseClient.from('tags').select('id, text');
   if (error) {
     throw error;
   }
-  return data?.map((tag) => ({
-    id: tag.id,
-    name: tag.text,
-  })) || [];
+  return (
+    data?.map((tag) => ({
+      id: tag.id,
+      name: tag.text,
+    })) || []
+  );
 };
 
-const {data, error } = await useAsyncData('tags', async () => {
+const { data, error } = await useAsyncData('tags', async () => {
   return getTags();
 });
 
@@ -88,6 +88,7 @@ const selectedTags = ref<Tag[]>([]);
 const isAddingTech = ref(false);
 const newTechSuccessfullyUploaded = ref(false);
 const projectCoverPageURL = ref('');
+const oldProjectCoverPageURL = ref('');
 const coverImageCaption = ref('');
 const projectImagesURLs = ref<string[]>([]);
 const projectImagesFiles = ref<File[]>([]);
@@ -108,9 +109,10 @@ const projectCoverPageData: ProjectFileData = reactive({
 });
 
 watch(selectedTagsIds, (newVal) => {
-  selectedTags.value = newVal.map((id) => tags.value.find((tag) => tag.id === id)!);
+  selectedTags.value = newVal.map(
+    (id) => tags.value.find((tag) => tag.id === id)!,
+  );
 });
-
 
 function bodyContentSaved(savedContent: string) {
   bodyContent.value = savedContent;
@@ -131,43 +133,45 @@ function addProjectImages(files: File[]) {
 async function addTech(newTechName: string) {
   try {
     newTechSuccessfullyUploaded.value = false;
-  isAddingTech.value = true;
-  const listOfTechsToAdd = newTechName.split(',').map((tech) => {
-    tech.trim()
-    return {
-      id: uuidV4(),
-      name: tech.toLowerCase(),
-    };
-  });
-  const {error} = await supabaseClient
-    .from('tags')
-    .insert(listOfTechsToAdd.map((tech) => ({
-      id: tech.id,
-      text: tech.name,
-    })));
-  if (error) {
+    isAddingTech.value = true;
+    const listOfTechsToAdd = newTechName.split(',').map((tech) => {
+      tech.trim();
+      return {
+        id: uuidV4(),
+        name: tech.toLowerCase(),
+      };
+    });
+    const { error } = await supabaseClient.from('tags').insert(
+      listOfTechsToAdd.map((tech) => ({
+        id: tech.id,
+        text: tech.name,
+      })),
+    );
+    if (error) {
+      console.error(error);
+      isAddingTech.value = false;
+      return;
+    }
+    tags.value.push(...listOfTechsToAdd);
+    isAddingTech.value = false;
+    isShowingAddTechForm.value = false;
+    newTechSuccessfullyUploaded.value = true;
+  } catch (error) {
     console.error(error);
     isAddingTech.value = false;
-    return;
   }
-  tags.value.push(...listOfTechsToAdd);
-  isAddingTech.value = false;
-  isShowingAddTechForm.value = false;
-  newTechSuccessfullyUploaded.value = true;
-
-} catch (error) {
-  console.error(error);
-  isAddingTech.value = false;
-}
 }
 
 function deleteCoverImage() {
   projectCoverPageData.file = undefined;
+  oldProjectCoverPageURL.value = projectCoverPageURL.value;
   projectCoverPageURL.value = '';
 }
 
 function deleteProjectImage(url: string) {
-  const index = projectImagesURLs.value.findIndex((imageURL) => imageURL === url);
+  const index = projectImagesURLs.value.findIndex(
+    (imageURL) => imageURL === url,
+  );
   if (index === -1) {
     console.error('Image not found');
     return;
@@ -183,35 +187,33 @@ function deleteSelectedTech(id: string) {
 const uploadImages = async (files: File[]) => {
   const uploads = files.map(async (file) => {
     const time = uuidV4();
-    const {error} = await supabaseClient
-      .storage
+    const { error } = await supabaseClient.storage
       .from('projectFiles')
       .upload(`files/${file.name}-${time}`, file);
     if (error) {
       throw error;
     }
-    const {data: {publicUrl}} = supabaseClient
-      .storage
+    const {
+      data: { publicUrl },
+    } = supabaseClient.storage
       .from('projectFiles')
       .getPublicUrl(`files/${file.name}-${time}`);
     return publicUrl;
-    })
+  });
   return await Promise.all(uploads);
-}
+};
 
 type Image = {
   url: string;
   caption?: string;
-}
+};
 
 const saveImagesToDB = async (images: Image[]) => {
-  const {error} = await supabaseClient
-    .from('images')
-    .insert(images);
+  const { error } = await supabaseClient.from('images').insert(images);
   if (error) {
     throw error;
   }
-}
+};
 
 const validateForm = () => {
   if (!projectName.value) {
@@ -231,7 +233,7 @@ const validateForm = () => {
     return false;
   }
   return true;
-}
+};
 
 async function createProject() {
   errorText.value = '';
@@ -256,23 +258,23 @@ async function createProject() {
       throw new Error('Cover image is required');
     }
     // Store Cover Image to DB
-    await saveImagesToDB([{
-      url: coverImageURL,
-      caption: coverImageCaption.value,
-    }]);
+    await saveImagesToDB([
+      {
+        url: coverImageURL,
+        caption: coverImageCaption.value,
+      },
+    ]);
     // Store Project Images to DB
-    const {error} = await supabaseClient
-      .from('projects')
-      .insert({
-        id: projectId,
-        title: projectTitle,
-        description,
-        overview_body: overview,
-        cover_image: coverImageURL,
-        is_published: isPublished.value,
-        hosting_link: demoLink.value,
-        github_link: projectGithubURL.value,
-      });
+    const { error } = await supabaseClient.from('projects').insert({
+      id: projectId,
+      title: projectTitle,
+      description,
+      overview_body: overview,
+      cover_image: coverImageURL,
+      is_published: isPublished.value,
+      hosting_link: demoLink.value,
+      github_link: projectGithubURL.value,
+    });
     if (error) {
       submitting.value = false;
       buttonLabel.value = 'CREATE';
@@ -285,45 +287,50 @@ async function createProject() {
       project_id: projectId,
       tag_id: tagId,
     }));
-    const {error: projectTagsError} = await supabaseClient
+    const { error: projectTagsError } = await supabaseClient
       .from('projects_tags')
       .insert(projectTags);
 
     // Upload Project Images to Storage
     let storedProjectImagesURLs: string[] = [];
     if (projectImagesFiles.value.length > 0) {
-     storedProjectImagesURLs = await uploadImages(projectImagesFiles.value);
+      storedProjectImagesURLs = await uploadImages(projectImagesFiles.value);
     }
 
     console.log('storedProjectImagesURLs', storedProjectImagesURLs);
 
     // Store Project Images to DB
-    await saveImagesToDB(storedProjectImagesURLs.map((url) => ({
-      url,
-    })));
+    await saveImagesToDB(
+      storedProjectImagesURLs.map((url) => ({
+        url,
+      })),
+    );
     const projectImages = storedProjectImagesURLs.map((url) => {
       console.log('url', url, projectId);
-      return {id: uuidV4(),
-      project_id: projectId,
-      image_url: url}
-    }
-    );
+      return {
+        id: uuidV4(),
+        project_id: projectId,
+        image_url: url,
+      };
+    });
 
-    const {error: projectImagesError} = await supabaseClient
+    const { error: projectImagesError } = await supabaseClient
       .from('projects_images')
       .insert(projectImages);
 
     if (projectTagsError || projectImagesError) {
       submitting.value = false;
       buttonLabel.value = 'CREATE';
-      errorText.value = projectTagsError?.message || projectImagesError?.message || 'Error gotten while saving project tags and images';
+      errorText.value =
+        projectTagsError?.message ||
+        projectImagesError?.message ||
+        'Error gotten while saving project tags and images';
     }
     buttonLabel.value = 'CREATED';
 
     setTimeout(() => {
       router.push(`/`);
     }, 1500);
-
   } catch (e) {
     submitting.value = false;
     buttonLabel.value = 'CREATE';
@@ -331,5 +338,4 @@ async function createProject() {
     console.error(e);
   }
 }
-
 </script>

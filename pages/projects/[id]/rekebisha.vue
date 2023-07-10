@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue';
+import { computed, reactive, ref } from 'vue';
 import { v4 as uuidV4 } from 'uuid';
 import { Image, Project, Tag } from '@/utils/types';
 import { Database } from '~/utils/database.types';
@@ -124,15 +124,22 @@ const isShowingAddTechForm = ref(false);
 const selectedTagsIds = ref<string[]>(
   state.selectedProject.tags.map((tag) => tag.id),
 );
+const newSelectedTagsIds = ref<string[]>(selectedTagsIds.value);
+const deletedTagsIds = ref<string[]>([]);
 const selectedTags = ref<Tag[]>(state.selectedProject.tags);
 const isAddingTech = ref(false);
 const newTechSuccessfullyUploaded = ref(false);
 const projectCoverPageURL = ref(state.selectedProject.coverImageURL);
+const oldProjectCoverPageURL = ref('');
+const newProjectCoverPageFile = ref<File | null>(null);
+const newProjectCoverPageURL = ref('');
 const coverImageCaption = ref('');
 const projectImagesURLs = ref<string[]>(
   state.selectedProject.images.map((image) => image.url),
 );
-const projectImagesFiles = ref<File[]>([]);
+const newProjectImagesURLs = ref<string[]>(projectImagesURLs.value);
+const deletedProjectImagesURLs = ref<string[]>([]);
+const newProjectImagesFiles = ref<File[]>([]);
 const projectName = ref(state.selectedProject.title);
 const demoLink = ref(state.selectedProject.demoLinkURL);
 const projectGithubURL = ref(state.selectedProject.githubLinkURL);
@@ -142,6 +149,7 @@ const buttonLabel = ref('UPDATE PROJECT');
 const techButtonLabel = ref('ADD TECH');
 const errorText = ref('');
 const isPublished = ref(state.selectedProject.isPublished);
+
 onMounted(async () => {
   let project = projects.value?.find((project) => project.id === id);
   if (!project) {
@@ -163,7 +171,6 @@ const _updateProjectDetails = () => {
   projectImagesURLs.value = state.selectedProject.images.map(
     (image) => image.url,
   );
-  projectImagesFiles.value = [];
   projectName.value = state.selectedProject.title;
   demoLink.value = state.selectedProject.demoLinkURL;
   projectGithubURL.value = state.selectedProject.githubLinkURL;
@@ -173,20 +180,20 @@ const _updateProjectDetails = () => {
 interface ProjectFileData {
   file: File | undefined;
 }
-const projectCoverPageData: ProjectFileData = reactive({
+const newProjectCoverPageData: ProjectFileData = reactive({
   file: undefined,
 });
 function bodyContentSaved(savedContent: string) {
   bodyContent.value = savedContent;
 }
 function addUploadCoverImage(file: File) {
-  projectCoverPageData.file = file;
-  projectCoverPageURL.value = URL.createObjectURL(file);
+  newProjectCoverPageData.file = file;
+  newProjectCoverPageURL.value = URL.createObjectURL(file);
   isShowingUploadCoverPageModal.value = false;
 }
 function addProjectImages(files: File[]) {
-  projectImagesFiles.value = files;
-  projectImagesURLs.value = files.map((file) => URL.createObjectURL(file));
+  newProjectImagesFiles.value = files;
+  newProjectImagesURLs.value = files.map((file) => URL.createObjectURL(file));
   isShowingUploadProjectFilesModal.value = false;
 }
 async function addTech(newTechName: string) {
@@ -221,8 +228,11 @@ async function addTech(newTechName: string) {
   }
 }
 function deleteCoverImage() {
-  projectCoverPageData.file = undefined;
-  projectCoverPageURL.value = '';
+  newProjectCoverPageData.file = undefined;
+  newProjectCoverPageURL.value = '';
+  if (!oldProjectCoverPageURL.value) {
+    oldProjectCoverPageURL.value = projectCoverPageURL.value;
+  }
 }
 function deleteProjectImage(url: string) {
   const index = projectImagesURLs.value.findIndex(
@@ -232,12 +242,51 @@ function deleteProjectImage(url: string) {
     console.error('Image not found');
     return;
   }
-  projectImagesFiles.value.splice(index, 1);
-  projectImagesURLs.value.splice(index, 1);
+  if (newProjectImagesURLs.value.includes(url)) {
+    newProjectImagesURLs.value = newProjectImagesURLs.value.filter(
+      (imageURL) => imageURL !== url,
+    );
+    return;
+  }
+  if (!deletedProjectImagesURLs.value.includes(url)) {
+    deletedProjectImagesURLs.value.push(url);
+  }
 }
 function deleteSelectedTech(id: string) {
-  selectedTagsIds.value = selectedTagsIds.value.filter((tagId) => tagId !== id);
+  if (newSelectedTagsIds.value.includes(id)) {
+    newSelectedTagsIds.value = newSelectedTagsIds.value.filter(
+      (tagId) => tagId !== id,
+    );
+    return;
+  }
+  if (!deletedTagsIds.value.includes(id)) {
+    deletedTagsIds.value.push(id);
+  }
 }
+const computedListOfImagesURLs = computed(() => {
+  const listOfURLs = [
+    ...projectImagesURLs.value,
+    ...newProjectImagesURLs.value,
+  ];
+  return listOfURLs.filter(
+    (url) => !deletedProjectImagesURLs.value.includes(url),
+  );
+});
+
+const computedSelectedListOfTagsID = computed(() => {
+  const listOfNewTags = newSelectedTagsIds.value
+    .map((tagId) => tags.value.find((tag) => tag.id === tagId))
+    .filter((tag) => tag !== undefined) as Tag[];
+  const listOfTags = [...selectedTags.value, ...listOfNewTags];
+  return listOfTags
+    .map((tag) => tag.id)
+    .filter((tagID) => !deletedTagsIds.value.includes(tagID));
+});
+
+const computedCoverImageURL = computed(
+  () => newProjectCoverPageURL.value || projectCoverPageURL.value,
+);
+
 const uploadImages = async (files: File[]) => {
   const uploads = files.map(async (file) => {
     const time = uuidV4();
@@ -254,10 +303,91 @@ const uploadImages = async (files: File[]) => {
       .getPublicUrl(`files/${file.name}-${time}`);
     return publicUrl;
   });
-  return await Promise.all(uploads);
+  return Promise.allSettled(uploads);
 };
-function editProject() {
-  console.log('edit project');
+const validateForm = () => {
+  if (!projectName.value) {
+    errorText.value = 'Project name is required';
+    return false;
+  }
+  if (!projectDescription.value) {
+    errorText.value = 'Project description is required';
+    return false;
+  }
+  if (!bodyContent.value) {
+    errorText.value = 'Project overview is required';
+    return false;
+  }
+  return true;
+};
+const saveImagesToDB = async (images: Image[]) => {
+  const { error } = await supabaseClient.from('images').insert(images);
+  if (error) {
+    throw error;
+  }
+};
+const deleteImagesFromDB = async (imagesURLs: string[]) => {
+  const { error } = await supabaseClient
+    .from('images')
+    .delete()
+    .match({ url: imagesURLs });
+  if (error) {
+    throw error;
+  }
+};
+async function editProject() {
+  errorText.value = '';
+  submitting.value = true;
+  buttonLabel.value = 'Editing...';
+  if (!validateForm()) {
+    submitting.value = false;
+    buttonLabel.value = 'Edit Project';
+    return;
+  }
+  try {
+    const projectTitle = projectName.value.trim();
+    const description = projectDescription.value.trim();
+    const overview = bodyContent.value.trim();
+    let coverPageURL = '';
+    if (newProjectCoverPageData.file) {
+      const [res] = await uploadImages([newProjectCoverPageData.file]);
+      if (res.status === 'rejected') {
+        errorText.value = res.reason;
+        return;
+      }
+      coverPageURL = res.value;
+      await saveImagesToDB([
+        {
+          url: coverPageURL,
+          caption: coverImageCaption.value,
+        },
+      ]);
+      await deleteImagesFromDB([oldProjectCoverPageURL.value]);
+    } else {
+      coverPageURL = projectCoverPageURL.value;
+    }
+    if (newProjectImagesFiles.value.length) {
+      const storeProjectImagesURLs = await uploadImages(
+        newProjectImagesFiles.value,
+      );
+      if (res.status === 'rejected') {
+        errorText.value = res.reason;
+        return;
+      }
+      const imagesURLs = res.value;
+      await saveImagesToDB(
+        imagesURLs.map((url) => ({
+          url,
+          caption: '',
+        })),
+      );
+    }
+  } catch (e) {
+    console.error(e);
+    errorText.value = e?.message;
+    submitting.value = false;
+    buttonLabel.value = 'Edit Project';
+  }
 }
 </script>
 
@@ -268,37 +398,37 @@ function editProject() {
     </h2>
 
     <ProjectForm
-      @submit_button_clicked="editProject"
-      @project_name_updated="projectName = $event"
-      @demo_link_updated="demoLink = $event"
-      @project_github_url_updated="projectGithubURL = $event"
-      :projectName="projectName"
-      @project_description_updated="projectDescription = $event"
-      :demo-link="demoLink"
-      @cover_image_caption_updated="coverImageCaption = $event"
-      :project-github-u-r-l="projectGithubURL"
-      @selected_tags_ids_updated="selectedTagsIds = $event"
-      :project-description="projectDescription"
-      @body_content_updated="bodyContentSaved"
-      :cover-image-caption="coverImageCaption"
-      @project_cover_image_updated="addUploadCoverImage"
-      :selected-tags-ids="selectedTagsIds"
-      @project_cover_image_deleted="deleteCoverImage"
-      :project-images-u-r-ls="projectImagesURLs"
-      @project_images_updated="addProjectImages"
-      :body-content="bodyContent"
-      @add_tech="addTech"
-      :project-cover-page-u-r-l="projectCoverPageURL"
-      @delete_selected_tech="deleteSelectedTech"
-      :tags="tags"
-      @project_image_deleted="deleteProjectImage"
-      :is-adding-tech="isAddingTech"
-      @publish_updated="isPublished = $event"
       :add-tech-button-label="techButtonLabel"
+      :body-content="bodyContent"
+      :cover-image-caption="coverImageCaption"
       :create-button-label="buttonLabel"
+      :demo-link="demoLink"
       :error-text="errorText"
-      :is-submitting="submitting"
+      :is-adding-tech="isAddingTech"
       :is-published="isPublished"
+      :is-submitting="submitting"
+      :project-cover-page-u-r-l="computedCoverImageURL"
+      :project-description="projectDescription"
+      :project-github-u-r-l="projectGithubURL"
+      :project-images-u-r-ls="computedListOfImagesURLs"
+      :project-name="projectName"
+      :selected-tags-ids="computedSelectedListOfTagsID"
+      :tags="tags"
+      @add_tech="addTech"
+      @body_content_updated="bodyContentSaved"
+      @cover_image_caption_updated="coverImageCaption = $event"
+      @delete_selected_tech="deleteSelectedTech"
+      @demo_link_updated="demoLink = $event"
+      @project_cover_image_deleted="deleteCoverImage"
+      @project_cover_image_updated="addUploadCoverImage"
+      @project_description_updated="projectDescription = $event"
+      @project_github_url_updated="projectGithubURL = $event"
+      @project_image_deleted="deleteProjectImage"
+      @project_images_updated="addProjectImages"
+      @project_name_updated="projectName = $event"
+      @publish_updated="isPublished = $event"
+      @selected_tags_ids_updated="selectedTagsIds = $event"
+      @submit_button_clicked="editProject"
     />
   </div>
 </template>
