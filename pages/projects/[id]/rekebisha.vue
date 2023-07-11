@@ -410,7 +410,6 @@ async function editProject() {
       }
     }
     if (deletedProjectImagesURLs.value.length) {
-      await deleteImagesFromDB(deletedProjectImagesURLs.value);
       const { error: projectImagesError } = await supabaseClient
           .from('projects_images')
           .delete()
@@ -418,6 +417,7 @@ async function editProject() {
       if (projectImagesError) {
           handleError(projectImagesError.message);
       }
+      await deleteImagesFromDB(deletedProjectImagesURLs.value);
     }
     if (newSelectedTagsIds.value.length) {
       const projectTags = newSelectedTagsIds.value.map((tagId) => ({
