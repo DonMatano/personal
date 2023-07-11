@@ -104,23 +104,24 @@ async function parseDataToHtml(contentData: EditorJS.OutputData) {
       case 'header': {
         const heading = block.data;
         htmlOutput.value += `
-<h${heading.level} class="text-[2.5rem] md:text-[4.5rem] lg:text-xl font-bold leading-[4.5rem] tracking-[-0.028em] my-3">
+<h${heading.level} class="text-[2.5rem] font-bold leading-[4.5rem] tracking-[-0.028em] my-3">
   ${heading.text}
 </h${heading.level}>`;
         break;
       }
       case 'paragraph': {
         const paragraph = block.data;
-        htmlOutput.value += `<p class="text-body my-2">${paragraph.text}</p>`;
+        htmlOutput.value += `<p class="text-body my-4">${paragraph.text}</p>`;
         break;
       }
       case 'list': {
         const list = block.data;
         const typeOfList = list.style === 'unordered' ? 'ul' : 'ol';
         htmlOutput.value += `
-          <${typeOfList}>
+          <${typeOfList} class="list-disc ml-5">
   ${list.items.reduce(
-    (appended: string, item: string) => appended + `<li my-1>${item}</li>`,
+    (appended: string, item: string) => appended + `
+        <li class="my-1">${item}</li>`,
     '',
   )}
 </${typeOfList}>
