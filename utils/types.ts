@@ -5,7 +5,7 @@ export type Tag = {
 
 export type Image = {
   url: string;
-  caption: string;
+  caption?: string;
 }
 
 export type Project = {

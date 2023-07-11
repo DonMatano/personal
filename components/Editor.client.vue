@@ -87,7 +87,9 @@ const deStringifyBodyContent = () => {
     const res = JSON.parse(props.bodyContent) as EditorJS.OutputData;
     console.log('parsed bodyContent', res);
     editorData.outputData = res;
-    editorRef.render(res);
+    if (editorRef) {
+      editorRef.render(res);
+    }
   } catch (e) {
     console.error('Error parsing bodyContent', e);
   }

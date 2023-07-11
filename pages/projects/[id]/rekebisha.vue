@@ -335,6 +335,12 @@ const deleteImagesFromDB = async (imagesURLs: string[]) => {
     throw error;
   }
 };
+const handleError = (message = 'Failed to edit project') => {
+  console.error(error);
+  submitting.value = false;
+  buttonLabel.value = 'Edit Project';
+  errorText.value = message;
+};
 async function editProject() {
   errorText.value = '';
   submitting.value = true;
@@ -347,8 +353,10 @@ async function editProject() {
   try {
     const projectTitle = projectName.value.trim();
     const description = projectDescription.value.trim();
+    const failedToUploadImages = [];
     const overview = bodyContent.value.trim();
     let coverPageURL = '';
+    let newProjectImagesURLs: string[] = [];
     if (newProjectCoverPageData.file) {
       const [res] = await uploadImages([newProjectCoverPageData.file]);
       if (res.status === 'rejected') {
@@ -370,17 +378,91 @@ async function editProject() {
       const storeProjectImagesURLs = await uploadImages(
         newProjectImagesFiles.value,
       );
-      if (res.status === 'rejected') {
-        errorText.value = res.reason;
-        return;
+      storeProjectImagesURLs.forEach((res, i) => {
+        if (res.status === 'rejected') {
+          errorText.value = res.reason;
+          failedToUploadImages.push({
+            file: newProjectImagesFiles.value[i],
+            reason: res.reason,
+          });
+        } else {
+          newProjectImagesURLs.push(res.value);
+        }
+      });
+      if (failedToUploadImages.length) {
+        errorText.value = `Failed to upload ${failedToUploadImages.length} images`;
       }
-      const imagesURLs = res.value;
       await saveImagesToDB(
-        imagesURLs.map((url) => ({
-          url,
-          caption: '',
+        newProjectImagesURLs.map((url) => ({
+          url
         })),
       );
+      const projectImages = newProjectImagesURLs.map((url) => ({
+        id: uuidV4(),
+        image_url: url,
+        project_id: id as string,
+      }));
+      const { error: projectImagesError } = await supabaseClient
+          .from('projects_images')
+          .insert(projectImages);
+      if (projectImagesError) {
+         handleError(projectImagesError.message);
+      }
+    }
+    if (deletedProjectImagesURLs.value.length) {
+      await deleteImagesFromDB(deletedProjectImagesURLs.value);
+      const { error: projectImagesError } = await supabaseClient
+          .from('projects_images')
+          .delete()
+          .match({ image_url: deletedProjectImagesURLs.value });
+      if (projectImagesError) {
+          handleError(projectImagesError.message);
+      }
+    }
+    if (newSelectedTagsIds.value.length) {
+      const projectTags = newSelectedTagsIds.value.map((tagId) => ({
+        id: uuidV4(),
+        project_id: id as string,
+        tag_id: tagId,
+      }));
+      const { error: projectTagsError } = await supabaseClient
+        .from('projects_tags')
+        .insert(projectTags);
+      if (projectTagsError) {
+        handleError(projectTagsError.message);
+      }
+    }
+    if (deletedTagsIds.value.length) {
+      const { error: projectTagsError } = await supabaseClient
+        .from('projects_tags')
+        .delete()
+        .eq('tag_id', deletedTagsIds.value);
+      if (projectTagsError) {
+        handleError(projectTagsError.message);
+      }
+    }
+    const { error, data } = await supabaseClient
+      .from('projects')
+      .update({
+        title: projectTitle,
+        description,
+        overview_body: overview,
+        cover_image: coverPageURL,
+        hosting_link: demoLink.value,
+        github_link: projectGithubURL.value,
+        is_published: isPublished.value,
+      })
+      .eq('id', id as string).select('*');
+    if (error) {
+      handleError(error.message);
+    } else {
+      console.log('data', data);
+      submitting.value = false;
+      buttonLabel.value = 'Successfully Edited';
+      clearNuxtState()
+      setTimeout(() => {
+        router.push(`/projects/${id}`);
+      }, 2000);
     }
   } catch (e) {
     console.error(e);
